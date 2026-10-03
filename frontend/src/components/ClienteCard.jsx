@@ -1,10 +1,11 @@
 function ClienteCard({cliente}){
     return(
         <div>
-            <h3>{cliente.nombre}</h3>
-            <p>Categoria: {cliente.categoria}</p>
-            <p>Precio: s/ {cliente.stock}</p>
-            <p>Stock: {cliente.stock}</p>
+            <h3>{cliente.nombre}{cliente.apellido}</h3>
+            <p>DNI/RUC: {cliente.dniRuc}</p>
+            <p>Teléfono: {cliente.telefono}</p>
+            <p>Email: {cliente.email}</p>
+            <p>Direción: {cliente.direccion}</p>
             <hr />
         </div>
     );
