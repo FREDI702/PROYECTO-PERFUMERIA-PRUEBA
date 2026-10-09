@@ -1,0 +1,5 @@
+.cliente-form { display: flex; flex-direction: column; gap: 8px; max-width: 360px; margin: 16px auto; }
+.cliente-form input { padding: 8px; border-radius: 6px; border: 1px solid #888; }
+.acciones { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+.peligro { background: #b91c1c; color: #fff; }
+.error { color: #ef4444; font-weight: bold; }
