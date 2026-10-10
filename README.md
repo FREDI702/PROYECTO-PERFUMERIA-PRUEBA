@@ -1,10 +1,10 @@
-# Perfumería de Néctar
+# 🌸 Perfumería de Néctar
 
 **Integrantes:** Videz, Fredi
 
 ---
 
-## Descripción del problema
+## 🎯 Descripción del problema
 
 Comprar perfumes suele ser incómodo: el catálogo está disperso, no hay un lugar único donde ver
 lo que existe y el negocio lleva sus registros a mano. **Perfumería de Néctar** facilita el uso y
@@ -12,7 +12,7 @@ la compra de perfumes con una plataforma moderna donde se puede encontrar lo que
 centraliza la información del negocio (clientes, marcas, perfumes, ventas, pedidos de envío y
 recepción de carga) en una base de datos real.
 
-## Tecnologías
+## 🛠️ Tecnologías
 
 | Capa | Tecnología |
 |---|---|
@@ -22,14 +22,14 @@ recepción de carga) en una base de datos real.
 | Despliegue backend | **Railway** |
 | Despliegue frontend | **Vercel** |
 
-## Enlaces públicos
+## 🔗 Enlaces públicos
 
 - **Frontend (Vercel):** https://proyecto-perfumeria-prueba.vercel.app
 - **Backend (Railway):** https://proyecto-perfumeria-prueba-production.up.railway.app
   - Ejemplo de endpoint: https://proyecto-perfumeria-prueba-production.up.railway.app/api/clientes
 - **Repositorio:** https://github.com/FREDI702/PROYECTO-PERFUMERIA-PRUEBA
 
-## Funcionalidades implementadas
+## ✨ Funcionalidades implementadas
 
 **Clientes (CRUD completo desde la interfaz):**
 
@@ -50,7 +50,7 @@ recepción de carga) en una base de datos real.
 | Recepción de carga | `/api/recepciones` | GET, GET por id, POST, PUT, DELETE |
 | Ventas | `/api/ventas` | GET, PUT |
 
-## Estructura del proyecto
+## 📁 Estructura del proyecto
 
 ```
 PROYECTO-PERFUMERIA-PRUEBA/
@@ -58,7 +58,7 @@ PROYECTO-PERFUMERIA-PRUEBA/
 └── Interfaz/   Aplicación web con React + Vite
 ```
 
-## Cómo ejecutarlo localmente
+## 🚀 Cómo ejecutarlo localmente
 
 ### Requisitos
 
@@ -66,6 +66,9 @@ PROYECTO-PERFUMERIA-PRUEBA/
 - Node.js 20 o superior (incluye npm)
 - Una base de datos PostgreSQL (la del proyecto está en Neon)
 - Git
+
+> **Credenciales de la base de datos:** por seguridad no se publican en este repositorio.
+> Se entregan por separado al docente. Con ellas se completan las variables de entorno del paso 2.
 
 ### 1. Clonar el repositorio
 
@@ -76,8 +79,7 @@ cd PROYECTO-PERFUMERIA-PRUEBA
 
 ### 2. Backend
 
-El backend lee la conexión a la base de datos desde **variables de entorno**
-(no hay credenciales en el código):
+El backend lee la conexión a la base de datos desde **variables de entorno** (no hay credenciales en el código):
 
 | Variable | Descripción | Ejemplo |
 |---|---|---|
@@ -87,10 +89,9 @@ El backend lee la conexión a la base de datos desde **variables de entorno**
 | `FRONTEND_URL` | *(opcional)* Origen permitido por CORS | `http://localhost:5173` (por defecto) |
 | `PORT` | *(opcional)* Puerto del servidor | `8080` (por defecto) |
 
-> `DB_URL` debe empezar con `jdbc:postgresql://`. No es la misma URL que muestra Neon
-> (`postgresql://usuario:clave@host/...`).
+> `DB_URL` debe empezar con `jdbc:postgresql://`. No es la misma URL que muestra Neon (`postgresql://usuario:clave@host/...`).
 
-Ejecutar desde la carpeta `backend`.
+Ejecutar desde la carpeta `backend`:
 
 **Windows (PowerShell):**
 
@@ -112,12 +113,14 @@ export DB_PASSWORD="mi_clave"
 ./mvnw spring-boot:run
 ```
 
-**Con IntelliJ IDEA:** abrir la carpeta `backend`, ir a *Run → Edit Configurations* de
-`PerfumeriaApplication` y agregar las variables en *Environment variables*
-(`DB_URL=...;DB_USER=...;DB_PASSWORD=...`). Luego pulsar **Run**.
+**Con IntelliJ IDEA:**
 
-Cuando arranque, la consola muestra `CONEXION EXITOSA`. Para comprobarlo, abrir
-http://localhost:8080/api/clientes: debe devolver un JSON con los clientes.
+- Abrir la carpeta `backend`.
+- Ir a *Run → Edit Configurations* de `PerfumeriaApplication`.
+- Agregar en *Environment variables*: `DB_URL=...;DB_USER=...;DB_PASSWORD=...`
+- Pulsar **Run**.
+
+Cuando arranque, la consola muestra `CONEXION EXITOSA`. Para comprobarlo, abrir http://localhost:8080/api/clientes: debe devolver un JSON con los clientes.
 
 ### 3. Frontend
 
@@ -144,17 +147,15 @@ Abrir http://localhost:5173. Debe mostrarse la lista de clientes.
 
 > Vite lee el archivo `.env` solo al arrancar: si se cambia, hay que reiniciar `npm run dev`.
 
-## Despliegue
+## ☁️ Despliegue
 
 - **Base de datos:** proyecto en Neon (PostgreSQL).
-- **Backend en Railway:** variables `DB_URL`, `DB_USER`, `DB_PASSWORD` y `FRONTEND_URL`
-  (la URL pública de Vercel, **sin** barra final). Railway define `PORT` por su cuenta.
-- **Frontend en Vercel:** *Root Directory* `Interfaz`, *Framework Preset* Vite y la variable
-  `VITE_API_URL` apuntando a `https://proyecto-perfumeria-prueba-production.up.railway.app/api`.
-  Después de cambiar una variable hay que volver a desplegar, porque Vite la incorpora al compilar.
+- **Backend en Railway:** variables `DB_URL`, `DB_USER`, `DB_PASSWORD` y `FRONTEND_URL` (la URL pública de Vercel, **sin** barra final). Railway define `PORT` por su cuenta.
+- **Frontend en Vercel:** *Root Directory* `Interfaz`, *Framework Preset* Vite y la variable `VITE_API_URL` apuntando a `https://proyecto-perfumeria-prueba-production.up.railway.app/api`.
+- Después de cambiar una variable en Vercel hay que volver a desplegar, porque Vite la incorpora al compilar.
 - Cada `git push` a la rama `main` redespliega backend y frontend automáticamente.
 
-## Matriz de pruebas
+## 🧪 Matriz de pruebas
 
 | Caso | Acción | Resultado esperado | Estado |
 |---|---|---|---|
