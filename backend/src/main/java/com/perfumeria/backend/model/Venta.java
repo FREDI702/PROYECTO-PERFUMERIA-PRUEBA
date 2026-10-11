@@ -53,6 +53,18 @@ public class Venta {
     }
 
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Long idCliente) {
+        this.idCliente = idCliente;
+    }
+
     public LocalDateTime getFechaHora() {
         return fechaHora;
     }

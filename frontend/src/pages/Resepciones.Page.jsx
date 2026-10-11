@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import RecepcionCargaCard from "../components/RecepcionCargaCard.jsx";
-import { obtenerRecepciones } from "../services/RecepcionCargaService.jsx";
+import { obtenerRecepciones } from "../services/RecepcionCargaService.js";
 
 function RecepcionesPage() {
     const [items, setItems] = useState([]);

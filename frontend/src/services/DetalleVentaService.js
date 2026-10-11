@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, "");
 
 export function obtenerDetallesVenta() {
     return fetch(`${API_URL}/detalle-ventas`)

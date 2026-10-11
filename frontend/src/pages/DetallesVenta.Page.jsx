@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import DetalleVentaCard from "../components/DetalleVentaCard.jsx";
-import { obtenerDetallesVenta } from "../services/DetalleVentaService.jsx";
+import { obtenerDetallesVenta } from "../services/DetalleVentaService.js";
 
 function DetallesVentaPage() {
     const [items, setItems] = useState([]);

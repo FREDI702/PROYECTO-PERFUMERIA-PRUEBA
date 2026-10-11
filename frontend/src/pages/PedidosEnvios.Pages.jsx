@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PedidoEnvioCard from "../components/PedidoEnvioCard.jsx";
-import { obtenerPedidos } from "../services/PedidoEnvioService.jsx";
+import { obtenerPedidos } from "../services/PedidoEnvioService.js";
 
 function PedidosEnvioPage() {
     const [items, setItems] = useState([]);

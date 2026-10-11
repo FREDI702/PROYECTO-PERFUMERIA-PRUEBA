@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PerfumeCard from "../components/PerfumeCard.jsx";
-import { obtenerPerfumes } from "../services/PerfumeService.jsx";
+import { obtenerPerfumes } from "../services/PerfumeService.js";
 
 function PerfumesPage() {
     const [items, setItems] = useState([]);

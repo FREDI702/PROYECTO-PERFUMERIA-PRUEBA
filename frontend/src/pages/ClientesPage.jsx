@@ -6,7 +6,7 @@ import {
     crearCliente,
     actualizarCliente,
     eliminarCliente,
-} from "../services/ClienteService.jsx";
+} from "../services/ClienteService.js";
 import "../styles/Cliente.css";
 
 function ClientePage() {

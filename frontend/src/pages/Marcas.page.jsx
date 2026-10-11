@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import MarcaCard from "../components/MarcaCard.jsx";
-import { obtenerMarcas } from "../services/MarcaService.jsx";
+import { obtenerMarcas } from "../services/MarcaService.js";
 
 function MarcasPage() {
     const [items, setItems] = useState([]);

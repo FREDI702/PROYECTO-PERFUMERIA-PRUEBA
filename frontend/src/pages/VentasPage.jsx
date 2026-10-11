@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import VentaCard from "../components/VentaCard.jsx";
-import { obtenerVentas } from "../services/VentaService.jsx";
+import { obtenerVentas } from "../services/VentaService.js";
 
 function VentasPage() {
     const [items, setItems] = useState([]);
