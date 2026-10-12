@@ -82,14 +82,14 @@ function Acceso({ onIniciar, onCrearCuenta, errorInicial = "" }) {
                             Crear cuenta
                         </button>
                         <small className="acceso-ayuda">
-                            Administrador: gestiona registros · Usuario: solo consulta
+                            Clientes: compran y consultan pedidos · Administrador: gestiona la tienda
                         </small>
                     </>
                 ) : (
                     <>
                         <h1>{modo === "registro" ? "Crear cuenta" : "Iniciar sesión"}</h1>
                         <p>{modo === "registro"
-                            ? "Las cuentas nuevas tienen acceso de solo lectura."
+                            ? "Crea tu cuenta para comprar y consultar tus pedidos."
                             : "Ingresa con tu cuenta. Los permisos se asignan según tu rol."}</p>
                         <label>
                             {modo === "registro" ? "Usuario" : "Usuario o correo electrónico"}

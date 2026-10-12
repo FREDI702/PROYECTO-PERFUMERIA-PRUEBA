@@ -562,15 +562,10 @@ function Confirmacion({ pedido, dni, correo, onCerrar }) {
           onCerrar={onCerrar}
           extra={
             <p className="nt-aviso">
-              <strong>
-                Aviso a la tienda: {pedido.notificacionTiendaEnviada ? 'enviado a tu correo configurado.' : 'no se pudo enviar; revisa la configuración SMTP del backend.'}
-              </strong>
-              <br />
               {pedido.correoEnviado
-                ? <>Confirmación enviada a <strong>{correo}</strong>.</>
-                : <>No se pudo enviar la confirmación a <strong>{correo}</strong>.</>}
-              <br />
-              Tu número de orden es <strong>{pedido.idVenta}</strong> y el código de seguimiento es tu documento <strong>{dni}</strong>.
+                ? <>Enviamos el comprobante informativo a <strong>{correo}</strong>.</>
+                : <>No pudimos enviar el comprobante a <strong>{correo}</strong>; guarda los datos de seguimiento que aparecen aquí.</>}
+              {' '}Número de orden: <strong>{pedido.idVenta}</strong>. Código de seguimiento: tu DNI/RUC (<strong>{dni}</strong>).
             </p>
           }
         />

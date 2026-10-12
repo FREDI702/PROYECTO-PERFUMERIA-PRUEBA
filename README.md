@@ -1,6 +1,6 @@
-# PerfumeStore
+# Perfumería Néctar
 
-Aplicación de gestión de perfumería con frontend React/Vite y API REST Java/Spring Boot. El backend usa PostgreSQL.
+Tienda de perfumes y panel de gestión con frontend React/Vite y API REST Java/Spring Boot. El backend usa PostgreSQL.
 
 ## Requisitos
 
@@ -29,6 +29,15 @@ $env:USER_PASSWORD = [System.Net.NetworkCredential]::new("", $userSecure).Passwo
 ```
 
 La tienda solicita el correo del cliente y envía allí el número de orden y el DNI/RUC usado para consultar el seguimiento. También envía un aviso de nueva compra a `MAIL_NOTIFICATION_TO`; si no se define, usa `MAIL_USERNAME`. Para habilitar los envíos, configura `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` y `MAIL_FROM` en el entorno del backend. Por ejemplo, Gmail requiere una contraseña de aplicación; usa secretos del sistema de despliegue y nunca guardes la contraseña en el repositorio. Sin SMTP configurado, el pedido se registra igualmente y el cliente recibe un aviso para guardar sus datos de seguimiento.
+
+### Guion breve para la exposición
+
+1. Presenta el catálogo y muestra cómo filtrar perfumes por género y marca.
+2. Agrega un perfume al carrito y recorre el formulario de entrega y pago.
+3. Explica que el cliente puede consultar su pedido con el número de orden y su DNI/RUC.
+4. Si tienes acceso administrador, muestra cómo se gestionan perfumes y pedidos desde el panel.
+
+Para una compra en vivo, confirma antes que la API y el correo SMTP estén disponibles. El pago por Yape se verifica manualmente y el comprobante por email es informativo; no es una boleta electrónica emitida por SUNAT. No muestres contraseñas ni datos personales reales durante la presentación.
 
 El panel tiene una pantalla de acceso con opción para crear cuenta con usuario, correo y contraseña confirmada. Las cuentas registradas pueden iniciar sesión con su nombre de usuario o correo. El servidor asigna siempre el rol `USUARIO` a cuentas registradas: pueden consultar, pero no crear, editar ni eliminar datos. Los correos y nombres de usuario registrados deben ser únicos. Solo `ADMIN_USERNAME`, configurado en el servidor, puede administrar registros. La contraseña del administrador y la cuenta inicial de consulta son obligatorias y deben tener al menos 12 caracteres. No guardes credenciales en el repositorio. Para publicar el API, exige HTTPS y configura estas variables como secretos del servicio.
 
