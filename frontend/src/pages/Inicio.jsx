@@ -5,9 +5,81 @@ import Icon from "../components/Icon.jsx";
 import Badge from "../components/Badge.jsx";
 import GaleriaFragancias from "../components/GaleriaFragancias.jsx";
 
-function Grafico({ puntos }) {
-    const W = 600, H = 170, P = 24;
-    if (puntos.length === 0) return <p className="vacio">Aún no hay ventas registradas.</p>;
+const FORMATO_DIA = new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "long", year: "numeric" });
+const FORMATO_CORTO = new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "2-digit" });
+const FORMATO_MES_CORTO = new Intl.DateTimeFormat("es-PE", { month: "short" });
+
+function inicioSemana(fecha) {
+    const inicio = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    inicio.setDate(inicio.getDate() - ((inicio.getDay() + 6) % 7));
+    return inicio;
+}
+
+function claveFecha(fecha) {
+    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
+}
+
+function obtenerPeriodo(tipo, referencia) {
+    if (tipo === "dia") {
+        const inicio = new Date(referencia.getFullYear(), referencia.getMonth(), referencia.getDate());
+        const puntos = Array.from({ length: 24 }, (_, hora) => ({
+            clave: `${claveFecha(inicio)}-${String(hora).padStart(2, "0")}`,
+            dia: hora % 6 === 0 ? `${String(hora).padStart(2, "0")}:00` : "",
+            hora,
+        }));
+        return { inicio, fin: new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 1), puntos, titulo: FORMATO_DIA.format(inicio) };
+    }
+
+    if (tipo === "semana") {
+        const inicio = inicioSemana(referencia);
+        const puntos = Array.from({ length: 7 }, (_, indice) => {
+            const dia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + indice);
+            return {
+                clave: claveFecha(dia),
+                dia: new Intl.DateTimeFormat("es-PE", { weekday: "short", day: "2-digit" }).format(dia),
+            };
+        });
+        const ultimoDia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 6);
+        return {
+            inicio,
+            fin: new Date(ultimoDia.getFullYear(), ultimoDia.getMonth(), ultimoDia.getDate() + 1),
+            puntos,
+            titulo: `${FORMATO_CORTO.format(inicio)} – ${FORMATO_CORTO.format(ultimoDia)}`,
+        };
+    }
+
+    const inicio = new Date(referencia.getFullYear(), 0, 1);
+    const puntos = Array.from({ length: 12 }, (_, mes) => ({
+        clave: `${inicio.getFullYear()}-${String(mes + 1).padStart(2, "0")}`,
+        dia: FORMATO_MES_CORTO.format(new Date(inicio.getFullYear(), mes, 1)).replace(".", ""),
+    }));
+    return {
+        inicio,
+        fin: new Date(inicio.getFullYear() + 1, 0, 1),
+        puntos,
+        titulo: String(inicio.getFullYear()),
+    };
+}
+
+function clavePeriodo(tipo, fecha) {
+    if (tipo === "dia") return claveFecha(fecha);
+    if (tipo === "semana") return claveFecha(inicioSemana(fecha));
+    return String(fecha.getFullYear());
+}
+
+function desplazarPeriodo(tipo, fecha, paso) {
+    const siguiente = new Date(fecha);
+    if (tipo === "dia") siguiente.setDate(siguiente.getDate() + paso);
+    else if (tipo === "semana") siguiente.setDate(siguiente.getDate() + (7 * paso));
+    else siguiente.setFullYear(siguiente.getFullYear() + paso);
+    return siguiente;
+}
+
+function Grafico({ puntos, tipo }) {
+    const W = 720, H = 220, P = 34;
+    if (puntos.every((punto) => punto.cantidad === 0)) {
+        return <p className="vacio">No hay ventas registradas en este periodo.</p>;
+    }
     const max = Math.max(...puntos.map((p) => p.total), 1);
     const paso = puntos.length > 1 ? (W - 2 * P) / (puntos.length - 1) : 0;
     const xy = puntos.map((p, i) => [P + i * paso, H - P - (p.total / max) * (H - 2 * P)]);
@@ -19,8 +91,11 @@ function Grafico({ puntos }) {
             <path d={linea} fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinejoin="round" />
             {xy.map(([x, y], i) => (
                 <g key={i}>
+                    <title>{`${puntos[i].dia || `${String(puntos[i].hora).padStart(2, "0")}:00`}: ${soles(puntos[i].total)} · ${puntos[i].cantidad} ${puntos[i].cantidad === 1 ? "venta" : "ventas"}`}</title>
                     <circle cx={x} cy={y} r="4" fill="#7c3aed" />
-                    <text x={x} y={H - 6} textAnchor="middle" fontSize="11" fill="#8a84a3">{puntos[i].dia}</text>
+                    {puntos[i].dia && (
+                        <text x={x} y={H - 7} textAnchor="middle" fontSize={tipo === "dia" ? "10" : "11"} fill="#8a84a3">{puntos[i].dia}</text>
+                    )}
                 </g>
             ))}
         </svg>
@@ -30,6 +105,8 @@ function Grafico({ puntos }) {
 function Inicio() {
     const [d, setD] = useState(null);
     const [errores, setErrores] = useState([]);
+    const [periodo, setPeriodo] = useState("semana");
+    const [referencia, setReferencia] = useState(() => new Date());
 
     useEffect(() => {
         const recursos = ["ventas", "clientes", "pedidos", "detalle-ventas", "perfumes", "marcas"];
@@ -60,16 +137,34 @@ function Inicio() {
 
     if (!d) return <section className="pagina"><p className="vacio">Cargando...</p></section>;
 
-    const totalVentas = d.ventas.reduce((s, v) => s + Number(v.montoTotal || 0), 0);
+    const ventasValidas = d.ventas.filter((venta) => !/anulad|cancelad/i.test(venta.estadoVenta || ""));
+    const totalVentas = ventasValidas.reduce((s, v) => s + Number(v.montoTotal || 0), 0);
     const enCamino = d.pedidos.filter((p) => !/entreg|cancel/i.test(p.estadoEnvio || "")).length;
 
-    // Ventas agrupadas por día (últimos 7 días con ventas)
-    const porDia = {};
-    d.ventas.forEach((v) => {
-        const k = String(v.fechaHora || "").slice(0, 10);
-        if (k) porDia[k] = (porDia[k] || 0) + Number(v.montoTotal || 0);
+    const definicionPeriodo = obtenerPeriodo(periodo, referencia);
+    const acumulados = new Map(definicionPeriodo.puntos.map((punto) => [punto.clave, { total: 0, cantidad: 0 }]));
+    ventasValidas.forEach((venta) => {
+        const fechaVenta = new Date(venta.fechaHora);
+        if (Number.isNaN(fechaVenta.getTime()) || fechaVenta < definicionPeriodo.inicio || fechaVenta >= definicionPeriodo.fin) return;
+        const clave = periodo === "dia"
+            ? `${claveFecha(fechaVenta)}-${String(fechaVenta.getHours()).padStart(2, "0")}`
+            : periodo === "semana"
+                ? claveFecha(fechaVenta)
+                : `${fechaVenta.getFullYear()}-${String(fechaVenta.getMonth() + 1).padStart(2, "0")}`;
+        const acumulado = acumulados.get(clave);
+        if (acumulado) {
+            acumulado.total += Number(venta.montoTotal || 0);
+            acumulado.cantidad += 1;
+        }
     });
-    const puntos = Object.keys(porDia).sort().slice(-7).map((k) => ({ dia: k.slice(8) + "/" + k.slice(5, 7), total: porDia[k] }));
+    const puntos = definicionPeriodo.puntos.map((punto) => ({
+        ...punto,
+        ...acumulados.get(punto.clave),
+    }));
+    const ventasPeriodo = puntos.reduce((total, punto) => total + punto.total, 0);
+    const cantidadPeriodo = puntos.reduce((total, punto) => total + punto.cantidad, 0);
+    const promedioPeriodo = cantidadPeriodo ? ventasPeriodo / cantidadPeriodo : 0;
+    const periodoActual = clavePeriodo(periodo, referencia) === clavePeriodo(periodo, new Date());
 
     // Productos más vendidos
     const vendidos = {};
@@ -121,8 +216,37 @@ function Inicio() {
             </div>
 
             <div className="panel">
-                <h3>Ventas recientes</h3>
-                <Grafico puntos={puntos} />
+                <div className="ventas-cab">
+                    <div>
+                        <h3>Estadísticas de ventas</h3>
+                        <p>{periodo === "dia" ? FORMATO_DIA.format(referencia) : periodo === "semana" ? `Semana del ${definicionPeriodo.titulo}` : `Año ${definicionPeriodo.titulo}`}</p>
+                    </div>
+                    <div className="ventas-periodos" role="group" aria-label="Periodo de estadísticas">
+                        {[["dia", "Día"], ["semana", "Semana"], ["anio", "Año"]].map(([valor, texto]) => (
+                            <button
+                                className={periodo === valor ? "activo" : ""}
+                                key={valor}
+                                onClick={() => { setPeriodo(valor); setReferencia(new Date()); }}
+                                aria-pressed={periodo === valor}
+                            >
+                                {texto}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="ventas-navegacion">
+                    <button onClick={() => setReferencia((anterior) => desplazarPeriodo(periodo, anterior, -1))} aria-label="Ver periodo anterior">‹ Anterior</button>
+                    <strong>{definicionPeriodo.titulo}</strong>
+                    <button onClick={() => setReferencia((anterior) => desplazarPeriodo(periodo, anterior, 1))} disabled={periodoActual} aria-label="Ver periodo siguiente">Siguiente ›</button>
+                    {!periodoActual && <button className="periodo-actual" onClick={() => setReferencia(new Date())}>Periodo actual</button>}
+                </div>
+                <div className="ventas-resumen">
+                    <div><small>Ventas del periodo</small><strong>{soles(ventasPeriodo)}</strong></div>
+                    <div><small>Transacciones</small><strong>{cantidadPeriodo}</strong></div>
+                    <div><small>Promedio por venta</small><strong>{soles(promedioPeriodo)}</strong></div>
+                </div>
+                <Grafico puntos={puntos} tipo={periodo} />
+                <p className="ventas-nota">Se excluyen ventas anuladas y canceladas. Los pagos pendientes aún pueden no estar confirmados.</p>
             </div>
 
             <div className="dos-col">
