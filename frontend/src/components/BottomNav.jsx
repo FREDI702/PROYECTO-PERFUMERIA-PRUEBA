@@ -25,7 +25,7 @@ function BottomNav({ seccion, onCambiar, onSalir }) {
                                 <Icon nombre={e.icono} /> {e.titulo}
                             </button>
                         ))}
-                        <button onClick={onSalir}><Icon nombre="logout" /> Salir del panel</button>
+                        <button onClick={onSalir}><Icon nombre="logout" /> Cerrar sesión</button>
                     </div>
                 </div>
             )}

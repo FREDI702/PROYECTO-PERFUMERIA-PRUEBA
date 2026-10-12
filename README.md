@@ -19,10 +19,18 @@ $env:DB_URL = "jdbc:postgresql://localhost:5432/tu_base"
 $env:DB_USER = "tu_usuario"
 $env:DB_PASSWORD = "tu_clave"
 $env:FRONTEND_URL = "http://localhost:5173"
+$env:ADMIN_USERNAME = Read-Host "Usuario administrador"
+$adminSecure = Read-Host "Clave administrador (12 caracteres o mas)" -AsSecureString
+$env:ADMIN_PASSWORD = [System.Net.NetworkCredential]::new("", $adminSecure).Password
+$env:USER_USERNAME = Read-Host "Usuario de solo consulta"
+$userSecure = Read-Host "Clave de solo consulta (12 caracteres o mas)" -AsSecureString
+$env:USER_PASSWORD = [System.Net.NetworkCredential]::new("", $userSecure).Password
 .\mvnw.cmd spring-boot:run
 ```
 
-No guardes credenciales en el repositorio. Clientes, marcas, perfumes y ventas usan `public`; detalles, pedidos y recepciones usan `a_perfumeria`. La base configurada debe tener las tablas en esos esquemas. Reinicia el backend tras cambiar las entidades para que Hibernate use el mapeo actualizado.
+El panel tiene una pantalla de acceso con opción para crear cuenta con usuario, correo y contraseña confirmada. Las cuentas registradas pueden iniciar sesión con su nombre de usuario o correo. El servidor asigna siempre el rol `USUARIO` a cuentas registradas: pueden consultar, pero no crear, editar ni eliminar datos. Los correos y nombres de usuario registrados deben ser únicos. Solo `ADMIN_USERNAME`, configurado en el servidor, puede administrar registros. La contraseña del administrador y la cuenta inicial de consulta son obligatorias y deben tener al menos 12 caracteres. No guardes credenciales en el repositorio. Para publicar el API, exige HTTPS y configura estas variables como secretos del servicio.
+
+Al arrancar, el backend crea `public.app_users` si todavía no existe; las claves de las cuentas nuevas se guardan cifradas con BCrypt. El usuario de la base necesita permiso para crear esa tabla dentro de `public`. Clientes, marcas, perfumes y ventas usan `public`; detalles, pedidos y recepciones usan `a_perfumeria`. La base configurada debe tener las tablas en esos esquemas. Reinicia el backend tras cambiar las entidades para que Hibernate use el mapeo actualizado.
 
 Las pruebas del backend usan una base H2 temporal y no necesitan credenciales PostgreSQL:
 
@@ -53,6 +61,6 @@ El panel permite gestionar clientes, marcas, perfumes, ventas, detalles de venta
 
 ## Despliegue y acceso
 
-La pantalla de bienvenida solo permite entrar al panel; no hay cuentas, inicio de sesión ni protección de autenticación implementados. No publiques el API como servicio administrativo abierto a Internet hasta configurar autenticación y autorización.
+Las rutas de datos `/api/**` requieren autenticación. El backend permite lecturas a ambos roles y restringe las operaciones de escritura al rol administrador. El cierre de sesión limpia las credenciales de la pestaña actual; vuelve a iniciar sesión para entrar de nuevo. El registro público crea solo cuentas de consulta, nunca cuentas de administrador.
 
 La URL de producción configurada actualmente no ofrece el mismo estado que el código local: durante la revisión, `/api/perfumes` respondió `404` y `/api/marcas` respondió `500`, mientras otras rutas sí respondieron. Después de desplegar el backend actualizado, verifica la conexión y los esquemas PostgreSQL configurados antes de dar por corregida esa instalación.

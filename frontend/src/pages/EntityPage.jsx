@@ -7,8 +7,15 @@ import FormModal from "../components/FormModal.jsx";
 import PerfumeImg from "../components/PerfumeImg.jsx";
 import { soles, categoriaDe, etiqueta } from "../config.js";
 
-function EntityPage({ clave }) {
+const DESCRIPCIONES = {
+    clientes: "Consulta y organiza la información de tus clientes.",
+    perfumes: "Explora el catálogo y controla precios y existencias.",
+    ventas: "Revisa las ventas registradas y su estado.",
+};
+
+function EntityPage({ clave, rol }) {
     const entidad = ENTIDADES[clave];
+    const puedeGestionar = rol === "ADMIN";
     const [items, setItems] = useState([]);
     const [lookups, setLookups] = useState({});
     const [cargando, setCargando] = useState(true);
@@ -102,12 +109,22 @@ function EntityPage({ clave }) {
               });
 
     return (
-        <section className="pagina">
+        <section className={`pagina pagina-${clave}`}>
             <div className="pagina-cab">
-                <h1>{entidad.titulo}</h1>
-                <button className="btn" onClick={() => { setErrorForm(""); setModal({ item: null }); }}>
-                    <Icon nombre="plus" size={18} /> Agregar {entidad.singular}
-                </button>
+                <div className="pagina-titulos">
+                    <span className="pagina-eyebrow">GESTIÓN DE {entidad.titulo.toUpperCase()}</span>
+                    <h1>{entidad.titulo}</h1>
+                    {DESCRIPCIONES[clave] && <p className="pagina-descripcion">{DESCRIPCIONES[clave]}</p>}
+                </div>
+                <span className="pagina-conteo">
+                    {entidad.vista === "catalogo" ? productos.length : visibles.length}{" "}
+                    {entidad.vista === "catalogo" ? "productos" : entidad.titulo.toLowerCase()}
+                </span>
+                {puedeGestionar && (
+                    <button className="btn" onClick={() => { setErrorForm(""); setModal({ item: null }); }}>
+                        <Icon nombre="plus" size={18} /> Agregar {entidad.singular}
+                    </button>
+                )}
             </div>
 
             <div className="buscador">
@@ -142,14 +159,16 @@ function EntityPage({ clave }) {
                                 {f.derecha && <b>{f.derecha}</b>}
                                 <Badge texto={f.badge} />
                             </div>
-                            <div className="fila-acc">
-                                <button className="icono" title="Editar" onClick={() => { setErrorForm(""); setModal({ item: x }); }}>
-                                    <Icon nombre="edit" size={18} />
-                                </button>
-                                <button className="icono peligro" title="Eliminar" onClick={() => eliminar(x)}>
-                                    <Icon nombre="trash" size={18} />
-                                </button>
-                            </div>
+                            {puedeGestionar && (
+                                <div className="fila-acc">
+                                    <button className="icono" title="Editar" onClick={() => { setErrorForm(""); setModal({ item: x }); }}>
+                                        <Icon nombre="edit" size={18} />
+                                    </button>
+                                    <button className="icono peligro" title="Eliminar" onClick={() => eliminar(x)}>
+                                        <Icon nombre="trash" size={18} />
+                                    </button>
+                                </div>
+                            )}
                         </article>
                     );
                 })}
@@ -195,11 +214,17 @@ function EntityPage({ clave }) {
                                 <p className="desde">desde</p>
                                 <p className="precio">{soles(x.precio)}</p>
                                 <small className="stock">Stock: {x.stock ?? 0}</small>
-                                <button className="ver" onClick={() => { setErrorForm(""); setModal({ item: x }); }}>Ver información ›</button>
-                                <div className="producto-acc">
-                                    <button onClick={() => { setErrorForm(""); setModal({ item: x }); }}>Editar</button>
-                                    <button className="peligro" onClick={() => eliminar(x)}>Eliminar</button>
-                                </div>
+                                {puedeGestionar ? (
+                                    <>
+                                        <button className="ver" onClick={() => { setErrorForm(""); setModal({ item: x }); }}>Ver información ›</button>
+                                        <div className="producto-acc">
+                                            <button onClick={() => { setErrorForm(""); setModal({ item: x }); }}>Editar</button>
+                                            <button className="peligro" onClick={() => eliminar(x)}>Eliminar</button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <span className="ver solo-consulta">Información del producto</span>
+                                )}
                             </article>
                         ))}
                     </div>

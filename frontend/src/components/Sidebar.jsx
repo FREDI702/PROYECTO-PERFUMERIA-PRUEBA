@@ -1,7 +1,7 @@
 import Icon from "./Icon.jsx";
 import { ENTIDADES } from "../config.js";
 
-function Sidebar({ seccion, onCambiar, onSalir }) {
+function Sidebar({ seccion, onCambiar, onSalir, usuario, rol }) {
     return (
         <aside className="sidebar">
             <div className="marca">
@@ -18,9 +18,12 @@ function Sidebar({ seccion, onCambiar, onSalir }) {
                     </button>
                 ))}
             </nav>
-            <div className="perfil"><div className="avatar">AD</div><div><strong>Administrador</strong><small>PerfumeStore</small></div></div>
+            <div className="perfil">
+                <div className="avatar">{usuario.slice(0, 2).toUpperCase()}</div>
+                <div><strong>{usuario}</strong><small>{rol === "ADMIN" ? "Administrador" : "Usuario · solo lectura"}</small></div>
+            </div>
             <button className="salir" onClick={onSalir}>
-                <Icon nombre="logout" /> <span>Salir del panel</span>
+                <Icon nombre="logout" /> <span>Cerrar sesión</span>
             </button>
         </aside>
     );

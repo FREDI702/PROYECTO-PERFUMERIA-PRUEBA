@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import { soles, fecha } from "../config.js";
 import Icon from "../components/Icon.jsx";
 import Badge from "../components/Badge.jsx";
+import GaleriaFragancias from "../components/GaleriaFragancias.jsx";
 
 function Grafico({ puntos }) {
     const W = 600, H = 170, P = 24;
@@ -94,8 +95,14 @@ function Inicio() {
     ];
 
     return (
-        <section className="pagina">
-            <div className="pagina-cab"><h1>Inicio</h1></div>
+        <section className="pagina pagina-inicio">
+            <div className="pagina-cab inicio-cab">
+                <div className="pagina-titulos">
+                    <span className="pagina-eyebrow">PANEL DE CONTROL</span>
+                    <h1>Inicio</h1>
+                    <p className="pagina-descripcion">Un resumen rápido de la actividad de tu perfumería.</p>
+                </div>
+            </div>
 
             {errores.length > 0 && (
                 <div className="error" role="alert">
@@ -144,6 +151,8 @@ function Inicio() {
                     ))}
                 </div>
             </div>
+
+            <GaleriaFragancias />
         </section>
     );
 }

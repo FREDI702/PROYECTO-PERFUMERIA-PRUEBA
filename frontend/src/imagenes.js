@@ -25,6 +25,27 @@ const TABLA = [
     { archivo: "natura-homem-identidad", todas: ["identidad"] },
 ];
 
+export const IMAGENES_DISPONIBLES = [
+    { archivo: "avon-spiderman", nombre: "Avon Spiderman" },
+    { archivo: "cyzone-all-black", nombre: "Cyzone All Black" },
+    { archivo: "cyzone-nitro-night", nombre: "Cyzone Nitro Night" },
+    { archivo: "dior-sauvage", nombre: "Dior Sauvage" },
+    { archivo: "esika-city-love", nombre: "Ésika City Love" },
+    { archivo: "esika-comando-force", nombre: "Ésika Comando Force" },
+    { archivo: "esika-expression", nombre: "Ésika Expression" },
+    { archivo: "esika-pulso-absolute", nombre: "Ésika Pulso Absolute" },
+    { archivo: "esika-salvaje", nombre: "Ésika Salvaje" },
+    { archivo: "esika-vanilla", nombre: "Ésika Vanilla" },
+    { archivo: "esika-vibranza", nombre: "Ésika Vibranza" },
+    { archivo: "lattafa-khamrah-qahwa", nombre: "Lattafa Khamrah Qahwa" },
+    { archivo: "lbel-mithyka", nombre: "L'Bel Mithyka" },
+    { archivo: "loccitane-rose", nombre: "L'Occitane Rose" },
+    { archivo: "natura-essencial-oud", nombre: "Natura Essencial Oud" },
+    { archivo: "natura-essencial", nombre: "Natura Essencial" },
+    { archivo: "natura-homem-identidad", nombre: "Natura Homem Identidad" },
+    { archivo: "natura-homem-potence", nombre: "Natura Homem Potence" },
+];
+
 export function archivoDe(marca, nombre) {
     const texto = ` ${normal(`${marca || ""} ${nombre || ""}`)} `;
     const hallados = TABLA.filter((e) => e.todas.every((p) => texto.includes(` ${p} `)));
