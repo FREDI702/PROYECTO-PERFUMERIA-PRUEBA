@@ -28,9 +28,22 @@ $env:USER_PASSWORD = [System.Net.NetworkCredential]::new("", $userSecure).Passwo
 .\mvnw.cmd spring-boot:run
 ```
 
+La tienda solicita el correo del cliente y envía allí el número de orden y el DNI/RUC usado para consultar el seguimiento. También envía un aviso de nueva compra a `MAIL_NOTIFICATION_TO`; si no se define, usa `MAIL_USERNAME`. Para habilitar los envíos, configura `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` y `MAIL_FROM` en el entorno del backend. Por ejemplo, Gmail requiere una contraseña de aplicación; usa secretos del sistema de despliegue y nunca guardes la contraseña en el repositorio. Sin SMTP configurado, el pedido se registra igualmente y el cliente recibe un aviso para guardar sus datos de seguimiento.
+
 El panel tiene una pantalla de acceso con opción para crear cuenta con usuario, correo y contraseña confirmada. Las cuentas registradas pueden iniciar sesión con su nombre de usuario o correo. El servidor asigna siempre el rol `USUARIO` a cuentas registradas: pueden consultar, pero no crear, editar ni eliminar datos. Los correos y nombres de usuario registrados deben ser únicos. Solo `ADMIN_USERNAME`, configurado en el servidor, puede administrar registros. La contraseña del administrador y la cuenta inicial de consulta son obligatorias y deben tener al menos 12 caracteres. No guardes credenciales en el repositorio. Para publicar el API, exige HTTPS y configura estas variables como secretos del servicio.
 
 Al arrancar, el backend crea `public.app_users` si todavía no existe; las claves de las cuentas nuevas se guardan cifradas con BCrypt. El usuario de la base necesita permiso para crear esa tabla dentro de `public`. Clientes, marcas, perfumes y ventas usan `public`; detalles, pedidos y recepciones usan `a_perfumeria`. La base configurada debe tener las tablas en esos esquemas. Reinicia el backend tras cambiar las entidades para que Hibernate use el mapeo actualizado.
+
+### Probar una compra local con Yape
+
+El perfil `local-demo` usa una base H2 en memoria aislada; no se conecta a PostgreSQL ni modifica el catálogo publicado. Incluye el perfume de prueba **Dior Fahrenheit** a **S/ 1.00** con 10 unidades. Desde PowerShell en `backend`, configura las mismas variables seguras `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `USER_USERNAME` y `USER_PASSWORD` descritas arriba, y ejecuta:
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "local-demo"
+.\mvnw.cmd spring-boot:run
+```
+
+El inicializador se niega a insertar el perfume si la conexión no es H2. Los datos de esta base en memoria se pierden al detener el backend. Inicia el frontend apuntando a `http://localhost:8080/api`; después entra con una cuenta de usuario, agrega Fahrenheit al carrito y selecciona Yape. El QR se muestra en el pago, pero la aplicación no verifica transferencias: la confirmación del pago debe hacerse manualmente.
 
 Las pruebas del backend usan una base H2 temporal y no necesitan credenciales PostgreSQL:
 
@@ -61,6 +74,6 @@ El panel permite gestionar clientes, marcas, perfumes, ventas, detalles de venta
 
 ## Despliegue y acceso
 
-Las rutas de datos `/api/**` requieren autenticación. El backend permite lecturas a ambos roles y restringe las operaciones de escritura al rol administrador. El cierre de sesión limpia las credenciales de la pestaña actual; vuelve a iniciar sesión para entrar de nuevo. El registro público crea solo cuentas de consulta, nunca cuentas de administrador.
+Las rutas de datos `/api/**` requieren autenticación. El administrador puede gestionar el panel; las cuentas de usuario solo pueden consultar perfumes y marcas y usar las rutas de pedidos de la tienda. El cierre de sesión limpia las credenciales de la pestaña actual; vuelve a iniciar sesión para entrar de nuevo. El registro público crea solo cuentas de usuario, nunca administradores.
 
 La URL de producción configurada actualmente no ofrece el mismo estado que el código local: durante la revisión, `/api/perfumes` respondió `404` y `/api/marcas` respondió `500`, mientras otras rutas sí respondieron. Después de desplegar el backend actualizado, verifica la conexión y los esquemas PostgreSQL configurados antes de dar por corregida esa instalación.

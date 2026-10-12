@@ -3,6 +3,14 @@ const normal = (t = "") =>
     t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 const TABLA = [
+    { archivo: "chanel-no-5", todas: ["no", "5"] },
+    { archivo: "calvin-klein-eternity", todas: ["eternity"] },
+    { archivo: "calvin-klein-obsession", todas: ["obsession"] },
+    { archivo: "dior-miss-dior", todas: ["miss", "dior"] },
+    { archivo: "dior-joy", todas: ["joy"] },
+    { archivo: "chanel-coco-mademoiselle", todas: ["coco", "mademoiselle"] },
+    { archivo: "chanel-allure-homme-sport", todas: ["allure", "homme", "sport"] },
+    { archivo: "calvin-klein-euphoria", todas: ["euphoria"] },
     { archivo: "natura-essencial-oud", todas: ["essencial", "oud"] },
     { archivo: "natura-essencial", todas: ["essencial"] },
     { archivo: "dior-sauvage", todas: ["sauvage"] },

@@ -6,7 +6,7 @@ function Sidebar({ seccion, onCambiar, onSalir, usuario, rol }) {
         <aside className="sidebar">
             <div className="marca">
                 <Icon nombre="lotus" size={30} />
-                <span>PerfumeStore</span>
+                <span>Perfumería Néctar</span>
             </div>
             <nav>
                 <button className={seccion === "inicio" ? "activo" : ""} onClick={() => onCambiar("inicio")}>

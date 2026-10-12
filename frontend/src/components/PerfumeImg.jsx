@@ -36,7 +36,12 @@ export function Frasco({ nombre }) {
 function PerfumeImg({ id, nombre, marca }) {
     const [intento, setIntento] = useState(0);
     const archivo = archivoDe(marca, nombre);
-    const candidatas = [archivo && `/perfumes/${archivo}.jpg`, `/perfumes/${id}.jpg`, `/perfumes/${id}.png`].filter(Boolean);
+    const candidatas = [
+        archivo && `/perfumes/${archivo}.jpg`,
+        archivo && `/perfumes/${archivo}.png`,
+        `/perfumes/${id}.jpg`,
+        `/perfumes/${id}.png`,
+    ].filter(Boolean);
     if (intento >= candidatas.length) return <Frasco nombre={nombre} />;
     return <img className="foto" src={candidatas[intento]} alt={nombre} onError={() => setIntento(intento + 1)} />;
 }

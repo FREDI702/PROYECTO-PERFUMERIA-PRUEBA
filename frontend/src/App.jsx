@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import Icon from "./components/Icon.jsx";
-import { Frasco } from "./components/PerfumeImg.jsx";
 import Inicio from "./pages/Inicio.jsx";
 import EntityPage from "./pages/EntityPage.jsx";
+import Tienda from "./tienda/Tienda.jsx";
 import { ENTIDADES } from "./config.js";
 import { api } from "./api.js";
 
@@ -64,14 +64,16 @@ function Acceso({ onIniciar, onCrearCuenta, errorInicial = "" }) {
         <div className="bienvenida">
             <div className="bienvenida-marca">
                 <Icon nombre="lotus" size={34} />
-                <span>PerfumeStore<small>Fragancias que cuentan historias</small></span>
+                <span>Perfumería Néctar<small>Fragancias que cuentan historias</small></span>
             </div>
-            <div className="bienvenida-frasco"><Frasco nombre="PerfumeStore" /></div>
+            <div className="bienvenida-frasco">
+                <img src="/perfumeria-nectar.png" alt="Perfume Néctar Olefactif" />
+            </div>
             <form className="bienvenida-centro acceso-form" onSubmit={enviar}>
                 <span className="acceso-etiqueta">ACCESO SEGURO</span>
                 {modo === "opciones" ? (
                     <>
-                        <h1>Bienvenido a<br />PerfumeStore</h1>
+                        <h1>Bienvenido a<br />Perfumería Néctar</h1>
                         <p>Elige cómo deseas continuar.</p>
                         <button className="btn grande acceso-iniciar" type="button" onClick={() => seleccionarModo("entrar")}>
                             Iniciar sesión
@@ -231,6 +233,10 @@ function App() {
         );
     }
 
+    if (sesion.rol !== "ADMIN") {
+        return <Tienda sesion={sesion} onSalir={cerrarSesion} />;
+    }
+
     const titulo = seccion === "inicio" ? "Inicio" : ENTIDADES[seccion].titulo;
 
     return (
@@ -246,7 +252,7 @@ function App() {
                 <header className="topbar-m">
                     <Icon nombre="lotus" size={24} />
                     <strong>{titulo}</strong>
-                    <span className="rol-m">{sesion.rol === "ADMIN" ? "Administrador" : "Solo lectura"}</span>
+                    <span className="rol-m">Administrador</span>
                 </header>
                 {seccion === "inicio"
                     ? <Inicio key="inicio" />

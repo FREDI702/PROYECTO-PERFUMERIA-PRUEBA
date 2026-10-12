@@ -2,10 +2,13 @@ package com.perfumeria.backend.service;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,8 +77,8 @@ public class TiendaService {
         if (direccion.length() < 5) {
             throw new IllegalArgumentException("Ingresa tu dirección de entrega");
         }
-        if (!email.isEmpty() && !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
-            throw new IllegalArgumentException("El correo no es válido");
+        if (email.length() > 254 || !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            throw new IllegalArgumentException("Ingresa un correo válido para recibir la confirmación del pedido");
         }
 
         String pago = limpiar(pedido.metodoPago()).toLowerCase();
@@ -142,18 +145,18 @@ public class TiendaService {
                 "SELECT id_cliente FROM " + T_CLIENTE + " WHERE dni_ruc = ?", Long.class, dni);
         Long idCliente;
         if (existentes.isEmpty()) {
-            idCliente = jdbc.queryForObject(
+            idCliente = insertarYObtenerId(
                     "INSERT INTO " + T_CLIENTE + " (nombre, apellido, dni_ruc, telefono, email, direccion) "
-                            + "VALUES (?, ?, ?, ?, ?, ?) RETURNING id_cliente",
-                    Long.class, nombre, apellido, dni, telefono, email.isEmpty() ? null : email, direccion);
+                            + "VALUES (?, ?, ?, ?, ?, ?)",
+                    "id_cliente", nombre, apellido, dni, telefono, email.isEmpty() ? null : email, direccion);
         } else {
             idCliente = existentes.get(0);
         }
 
-        Long idVenta = jdbc.queryForObject(
+        Long idVenta = insertarYObtenerId(
                 "INSERT INTO " + T_VENTA + " (id_cliente, metodo_pago, tipo_comprobante, monto_total, estado_venta) "
-                        + "VALUES (?, ?, ?, ?, 'pendiente') RETURNING id_venta",
-                Long.class, idCliente, pago, comprobante, total);
+                        + "VALUES (?, ?, ?, ?, 'pendiente')",
+                "id_venta", idCliente, pago, comprobante, total);
 
         for (Map<String, Object> l : lineas) {
             jdbc.update(
@@ -162,10 +165,10 @@ public class TiendaService {
                     idVenta, l.get("idPerfume"), l.get("cantidad"), l.get("precioUnitario"));
         }
 
-        Long idPedido = jdbc.queryForObject(
+        Long idPedido = insertarYObtenerId(
                 "INSERT INTO " + T_PEDIDO + " (id_venta, fecha_pedido, estado_envio) "
-                        + "VALUES (?, CURRENT_DATE, 'PENDIENTE') RETURNING id_pedido",
-                Long.class, idVenta);
+                        + "VALUES (?, CURRENT_DATE, 'PENDIENTE')",
+                "id_pedido", idVenta);
 
         Map<String, Object> respuesta = new LinkedHashMap<>();
         respuesta.put("idVenta", idVenta);
@@ -216,5 +219,22 @@ public class TiendaService {
 
     private static String limpiar(String texto) {
         return texto == null ? "" : texto.trim();
+    }
+
+    private Long insertarYObtenerId(String sql, String columnaId, Object... valores) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            PreparedStatement statement = connection.prepareStatement(sql, new String[]{columnaId});
+            for (int i = 0; i < valores.length; i++) {
+                statement.setObject(i + 1, valores[i]);
+            }
+            return statement;
+        }, keyHolder);
+
+        Number id = keyHolder.getKey();
+        if (id == null) {
+            throw new IllegalStateException("La base no devolvió el identificador generado para " + columnaId);
+        }
+        return id.longValue();
     }
 }

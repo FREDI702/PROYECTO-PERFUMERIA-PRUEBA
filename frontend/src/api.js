@@ -29,7 +29,10 @@ async function pedir(ruta, opciones, mensaje) {
     }
 
     if (!respuesta.ok) {
-        const error = new Error(`${mensaje}: la API respondió ${respuesta.status} en /${ruta}.`);
+        const detalle = respuesta.status === 403
+            ? "El backend rechazó este permiso. Reinicia o actualiza el backend que usa el frontend y confirma que permita crear pedidos a usuarios."
+            : `la API respondió ${respuesta.status} en /${ruta}.`;
+        const error = new Error(`${mensaje}: ${detalle}`);
         error.status = respuesta.status;
         throw error;
     }
