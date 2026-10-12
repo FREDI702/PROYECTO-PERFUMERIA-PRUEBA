@@ -161,6 +161,7 @@ main { flex: 1; min-width: 0; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
 .stat { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(145deg, #fff, #fcfafb); border: 1px solid var(--borde); border-radius: 17px; padding: 19px; box-shadow: 0 5px 18px rgba(45, 32, 42, .035); }
 .stat strong { display: block; font-size: 1.5rem; margin-top: 4px; }
+.stat .stat-detalle { display: block; margin-top: 3px; font-size: .72rem; }
 .stat-ico { width: 44px; height: 44px; border-radius: 13px; background: #f2e8ef; color: var(--morado); display: grid; place-items: center; }
 .panel { background: #fff; border: 1px solid var(--borde); border-radius: 17px; padding: 20px; margin-bottom: 16px; box-shadow: 0 5px 18px rgba(45, 32, 42, .03); }
 .panel h3 { margin: 0 0 14px; font-size: 1rem; letter-spacing: -.01em; }

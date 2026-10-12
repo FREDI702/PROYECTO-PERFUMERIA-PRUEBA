@@ -76,6 +76,14 @@ function desplazarPeriodo(tipo, fecha, paso) {
     return siguiente;
 }
 
+function esVentaCompletada(venta) {
+    return String(venta.estadoVenta || "")
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .trim()
+        .toLowerCase() === "completada";
+}
+
 function Grafico({ puntos, tipo }) {
     const W = 760, H = 270, IZQUIERDA = 62, DERECHA = 38, ARRIBA = 22, ABAJO = 45;
     const anchoGrafico = W - IZQUIERDA - DERECHA;
@@ -100,8 +108,9 @@ function Grafico({ puntos, tipo }) {
             {escalas.map((escala, i) => (
                 <g key={i}>
                     <line x1={IZQUIERDA} x2={W - DERECHA} y1={escala.y} y2={escala.y} stroke="#eee8ee" strokeDasharray={i === 4 ? "0" : "3 5"} />
-                    <text x={IZQUIERDA - 9} y={escala.y + 4} textAnchor="end" fontSize="10" fill="#8a84a3">
-                        {i === 0 ? soles(escala.valor) : Math.round(escala.valor).toString()}
+                    <text x={IZQUIERDA - 9} y={escala.y + 4} textAnchor="end" fontSize="10" fill="#8a84a3">{soles(escala.valor)}</text>
+                    <text x={W - DERECHA + 9} y={escala.y + 4} fontSize="10" fill="#0e9f8a">
+                        {Math.round(maxCantidad * (1 - i / 4))}
                     </text>
                 </g>
             ))}
@@ -138,8 +147,6 @@ function Grafico({ puntos, tipo }) {
                     <circle cx={x} cy={y} r="4.5" fill="#fff" stroke="#0e9f8a" strokeWidth="3" />
                 </g>
             ))}
-            <text x={W - DERECHA + 9} y={ARRIBA + 4} fontSize="10" fill="#0e9f8a">{maxCantidad}</text>
-            <text x={W - DERECHA + 9} y={ARRIBA + altoGrafico + 4} fontSize="10" fill="#0e9f8a">0</text>
         </svg>
     );
 }
@@ -226,14 +233,19 @@ function Inicio() {
 
     if (!d) return <section className="pagina"><p className="vacio">Cargando...</p></section>;
 
-    const ventasValidas = d.ventas.filter((venta) => !/anulad|cancelad/i.test(venta.estadoVenta || ""));
-    const totalVentas = ventasValidas.reduce((s, v) => s + Number(v.montoTotal || 0), 0);
+    const ventasConfirmadas = d.ventas.filter(esVentaCompletada);
+    const ventasPendientes = d.ventas.filter((venta) => {
+        const estado = String(venta.estadoVenta || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").trim().toLowerCase();
+        return estado === "pendiente";
+    });
+    const montoPendiente = ventasPendientes.reduce((suma, venta) => suma + Number(venta.montoTotal || 0), 0);
+    const totalVentas = ventasConfirmadas.reduce((s, v) => s + Number(v.montoTotal || 0), 0);
     const enCamino = d.pedidos.filter((p) => !/entreg|cancel/i.test(p.estadoEnvio || "")).length;
 
     const definicionPeriodo = obtenerPeriodo(periodo, referencia);
     const acumulados = new Map(definicionPeriodo.puntos.map((punto) => [punto.clave, { total: 0, cantidad: 0 }]));
     const ventasDelPeriodo = [];
-    ventasValidas.forEach((venta) => {
+    ventasConfirmadas.forEach((venta) => {
         const fechaVenta = new Date(venta.fechaHora);
         if (Number.isNaN(fechaVenta.getTime()) || fechaVenta < definicionPeriodo.inicio || fechaVenta >= definicionPeriodo.fin) return;
         ventasDelPeriodo.push(venta);
@@ -257,8 +269,10 @@ function Inicio() {
     const promedioPeriodo = cantidadPeriodo ? ventasPeriodo / cantidadPeriodo : 0;
     const periodoActual = clavePeriodo(periodo, referencia) === clavePeriodo(periodo, new Date());
 
+    const idsVentasConfirmadas = new Set(ventasConfirmadas.map((venta) => Number(venta.id)));
     const vendidos = {};
-    d.detalles.forEach((x) => { vendidos[x.idPerfume] = (vendidos[x.idPerfume] || 0) + Number(x.cantidad || 0); });
+    d.detalles.filter((detalle) => idsVentasConfirmadas.has(Number(detalle.idVenta)))
+        .forEach((x) => { vendidos[x.idPerfume] = (vendidos[x.idPerfume] || 0) + Number(x.cantidad || 0); });
     const top = Object.entries(vendidos)
         .sort((a, b) => b[1] - a[1]).slice(0, 4)
         .map(([id, n]) => {
@@ -282,7 +296,8 @@ function Inicio() {
     const recientes = [...d.pedidos].sort((a, b) => b.id - a.id).slice(0, 4);
 
     const stats = [
-        { t: "Total ventas", v: soles(totalVentas), i: "cart" },
+        { t: "Ventas confirmadas", v: soles(totalVentas), i: "cart" },
+        { t: "Pagos por confirmar", v: String(ventasPendientes.length), detalle: `${soles(montoPendiente)} pendientes de validar`, i: "file" },
         { t: "Pedidos en camino", v: enCamino, i: "truck" },
         { t: "Clientes activos", v: d.clientes.length, i: "users" },
     ];
@@ -307,7 +322,7 @@ function Inicio() {
             <div className="stats">
                 {stats.map((s) => (
                     <div className="stat" key={s.t}>
-                        <div><small>{s.t}</small><strong>{s.v}</strong></div>
+                        <div><small>{s.t}</small><strong>{s.v}</strong>{s.detalle && <small className="stat-detalle">{s.detalle}</small>}</div>
                         <span className="stat-ico"><Icon nombre={s.i} /></span>
                     </div>
                 ))}
@@ -348,7 +363,7 @@ function Inicio() {
                     <span><i className="leyenda-transacciones" /> Número de ventas</span>
                 </div>
                 <Grafico puntos={puntos} tipo={periodo} />
-                <p className="ventas-nota">Se excluyen ventas anuladas y canceladas. Los pagos pendientes aún pueden no estar confirmados.</p>
+                <p className="ventas-nota">Solo se cuentan ventas marcadas como completadas. Los pedidos y pagos pendientes se muestran aparte, sin sumarse como ventas.</p>
             </div>
 
             <div className="analisis-ventas">

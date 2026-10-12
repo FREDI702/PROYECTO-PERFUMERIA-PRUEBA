@@ -12,7 +12,7 @@ function crearAuthHeader(usuario, clave) {
     return `Basic ${btoa(texto)}`;
 }
 
-async function pedir(ruta, opciones, mensaje) {
+async function pedir(ruta, opciones, mensaje, tiempoLimiteMs = 0) {
     if (!API_URL) {
         throw new Error("Falta configurar VITE_API_URL para conectar con el servidor.");
     }
@@ -21,11 +21,27 @@ async function pedir(ruta, opciones, mensaje) {
         ...(opciones?.headers || {}),
         ...(authHeader() ? { Authorization: authHeader() } : {}),
     };
+    const controlador = tiempoLimiteMs ? new AbortController() : null;
+    const temporizador = controlador
+        ? setTimeout(() => controlador.abort(), tiempoLimiteMs)
+        : null;
     let respuesta;
     try {
-        respuesta = await fetch(`${API_URL}/${ruta}`, { ...opciones, headers });
+        respuesta = await fetch(`${API_URL}/${ruta}`, {
+            ...opciones,
+            headers,
+            ...(controlador ? { signal: controlador.signal } : {}),
+        });
     } catch (error) {
+        if (controlador?.signal.aborted) {
+            throw new Error(
+                "El servidor tardó demasiado en responder. El pedido podría haberse registrado; revisa Pedidos o Seguimiento antes de intentarlo de nuevo para evitar duplicarlo.",
+                { cause: error },
+            );
+        }
         throw new Error(`${mensaje}: no se pudo conectar con /${ruta}.`, { cause: error });
+    } finally {
+        if (temporizador) clearTimeout(temporizador);
     }
 
     if (!respuesta.ok) {
@@ -77,7 +93,12 @@ export const api = {
     cerrarSesion: () => sessionStorage.removeItem(AUTH_KEY),
     listar: (ruta) => pedir(ruta, undefined, "No se pudo cargar la información"),
     crear: (ruta, datos) =>
-        pedir(ruta, { method: "POST", headers: JSON_HEADERS, body: JSON.stringify(datos) }, "No se pudo guardar"),
+        pedir(
+            ruta,
+            { method: "POST", headers: JSON_HEADERS, body: JSON.stringify(datos) },
+            "No se pudo guardar",
+            ruta === "tienda/pedidos" ? 45000 : 0,
+        ),
     actualizar: (ruta, id, datos) =>
         pedir(`${ruta}/${id}`, { method: "PUT", headers: JSON_HEADERS, body: JSON.stringify(datos) }, "No se pudo actualizar"),
     eliminar: (ruta, id) =>
