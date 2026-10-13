@@ -92,7 +92,7 @@ export const ENTIDADES = {
         fila: (x, ctx) => ({
             avatar: "V",
             titulo: etiqueta.ventas(x),
-            sub: `${etiqueta.clientes(buscar(ctx.clientes, x.idCliente) || { nombre: "Cliente", apellido: "" })} · ${fecha(x.fechaHora)}`,
+            sub: `${etiqueta.clientes(buscar(ctx.clientes, x.idCliente) || { nombre: "Cliente", apellido: "" })} · ${fecha(x.fechaHora)} · Pago: ${x.metodoPago || "No especificado"}`,
             derecha: soles(x.montoTotal),
             badge: x.estadoVenta,
         }),

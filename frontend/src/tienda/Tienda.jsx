@@ -29,6 +29,12 @@ const PAGOS = [
   { valor: 'tarjeta', texto: 'Tarjeta' },
   { valor: 'efectivo', texto: 'Efectivo contra entrega' },
 ];
+const OPCIONES_TARJETA = [
+  { valor: 'visa', nombre: 'Visa', marca: 'VISA' },
+  { valor: 'bcp', nombre: 'BCP', marca: 'BCP' },
+  { valor: 'nacion', nombre: 'Banco de la Nación', marca: 'Banco de la Nación' },
+  { valor: 'bbva', nombre: 'BBVA', marca: 'BBVA' },
+];
 const PASOS_ENVIO = [
   { clave: 'PENDIENTE', texto: 'Pedido recibido' },
   { clave: 'EN TRANSITO', texto: 'En camino' },
@@ -245,6 +251,7 @@ function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
   });
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [opcionTarjeta, setOpcionTarjeta] = useState('visa');
   const [obteniendoUbicacion, setObteniendoUbicacion] = useState(false);
   const [mensajeUbicacion, setMensajeUbicacion] = useState('');
   const departamentoSeleccionado = form.departamento
@@ -457,6 +464,31 @@ function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
             <img src="/pagos/yape-qr.png" alt="Código QR de pago con Yape" />
             <p>Paga el total exacto del pedido: <strong>{soles(total)}</strong>.</p>
             <p>Verifica el nombre del destinatario en Yape. El pedido quedará pendiente hasta confirmar manualmente el pago; esta página no valida la transferencia.</p>
+          </section>
+        )}
+
+        {form.metodoPago === 'tarjeta' && (
+          <section className="nt-tarjeta-demo" aria-label="Opciones de tarjeta">
+            <h3>Selecciona una opción de tarjeta</h3>
+            <div className="nt-tarjeta-opciones" role="radiogroup" aria-label="Tarjeta o banco">
+              {OPCIONES_TARJETA.map((opcion) => (
+                <label
+                  className={`nt-tarjeta-opcion${opcionTarjeta === opcion.valor ? ' seleccionada' : ''}`}
+                  key={opcion.valor}
+                >
+                  <input
+                    type="radio"
+                    name="opcion-tarjeta"
+                    value={opcion.valor}
+                    checked={opcionTarjeta === opcion.valor}
+                    onChange={() => setOpcionTarjeta(opcion.valor)}
+                  />
+                  <span className={`nt-tarjeta-marca nt-marca-${opcion.valor}`}>{opcion.marca}</span>
+                  <span>{opcion.nombre}</span>
+                </label>
+              ))}
+            </div>
+            <p>Demostración para la exposición: no ingreses datos de tarjeta. Esta opción no realiza cobros reales; el pago debe verificarse manualmente.</p>
           </section>
         )}
 

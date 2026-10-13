@@ -20,7 +20,9 @@ function EntityPage({ clave, rol }) {
     const [lookups, setLookups] = useState({});
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
+    const [mensaje, setMensaje] = useState("");
     const [errorForm, setErrorForm] = useState("");
+    const [confirmandoPago, setConfirmandoPago] = useState(null);
     const [busqueda, setBusqueda] = useState("");
     const [filtro, setFiltro] = useState("Todos");
     const [modal, setModal] = useState(null); // null | { item }
@@ -66,6 +68,26 @@ function EntityPage({ clave, rol }) {
             await cargar();
         } catch (e) {
             setErrorForm(e.message);
+        }
+    };
+
+    const confirmarPagoYape = async (venta) => {
+        const confirmar = window.confirm(
+            `Confirma que verificaste el pago de S/ ${Number(venta.montoTotal || 0).toFixed(2)} en Yape antes de marcar la venta #${venta.id} como completada.`,
+        );
+        if (!confirmar) return;
+
+        setConfirmandoPago(venta.id);
+        setError("");
+        setMensaje("");
+        try {
+            await api.actualizar("ventas", venta.id, { ...venta, estadoVenta: "Completada" });
+            setMensaje(`Pago Yape de la venta #${venta.id} confirmado. Las estadísticas ya lo cuentan como venta.`);
+            await cargar();
+        } catch (fallo) {
+            setError(fallo.message);
+        } finally {
+            setConfirmandoPago(null);
         }
     };
 
@@ -141,6 +163,7 @@ function EntityPage({ clave, rol }) {
             )}
 
             {error && <p className="error">{error}</p>}
+            {mensaje && <p className="exito" role="status">{mensaje}</p>}
             {cargando && <p className="vacio">Cargando...</p>}
             {!cargando && !error && productos.length === 0 && <p className="vacio">No hay registros.</p>}
 
@@ -159,6 +182,17 @@ function EntityPage({ clave, rol }) {
                                 {f.derecha && <b>{f.derecha}</b>}
                                 <Badge texto={f.badge} />
                             </div>
+                            {clave === "ventas" && puedeGestionar
+                                && String(x.metodoPago || "").toLowerCase() === "yape"
+                                && String(x.estadoVenta || "").toLowerCase() === "pendiente" && (
+                                    <button
+                                        className="btn confirmar-pago"
+                                        onClick={() => confirmarPagoYape(x)}
+                                        disabled={confirmandoPago === x.id}
+                                    >
+                                        {confirmandoPago === x.id ? "Guardando..." : "Confirmar pago Yape"}
+                                    </button>
+                                )}
                             {puedeGestionar && (
                                 <div className="fila-acc">
                                     <button className="icono" title="Editar" onClick={() => { setErrorForm(""); setModal({ item: x }); }}>
