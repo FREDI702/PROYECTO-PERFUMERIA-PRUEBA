@@ -20,7 +20,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "ADMIN_USERNAME=admin-prueba",
         "ADMIN_PASSWORD=TestAdminPass123!",
         "USER_USERNAME=usuario-prueba",
-        "USER_PASSWORD=TestUserPass123!"
+        "USER_PASSWORD=TestUserPass123!",
+        "MP_ACCESS_TOKEN=",
+        "MP_WEBHOOK_SECRET=",
+        "MP_WEBHOOK_URL="
 })
 @AutoConfigureMockMvc
 class PerfumeriaApplicationTests {
@@ -221,6 +224,24 @@ class PerfumeriaApplicationTests {
                 Integer.class,
                 idPerfume);
         assertEquals(1, stock);
+    }
+
+    @Test
+    void tarjetaNoCreaPedidoCuandoMercadoPagoNoEstaConfigurado() throws Exception {
+        mockMvc.perform(post("/api/tienda/pedidos")
+                        .with(httpBasic("usuario-prueba", "TestUserPass123!"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cliente": {},
+                                  "metodoPago": "tarjeta",
+                                  "tipoComprobante": "boleta",
+                                  "items": []
+                                }
+                                """))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.mensaje").value(
+                        "El pago con tarjeta aún no está configurado. Usa Yape o efectivo, o inténtalo más tarde."));
     }
 
     @Test

@@ -181,17 +181,11 @@
 .nt .nt-yape-pago p strong { color: var(--nt-ink); }
 .nt .nt-tarjeta-demo { margin: 4px 0 14px; padding: 16px; border: 1px solid var(--nt-line); border-radius: 14px; background: #fbf7fc; }
 .nt .nt-tarjeta-demo h3 { margin: 0 0 12px; color: var(--nt-plum-dark); font-size: 1rem; text-align: center; }
-.nt .nt-tarjeta-opciones { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
-.nt .nt-tarjeta-opcion { display: flex; min-width: 0; min-height: 78px; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 9px 6px; border: 1px solid var(--nt-line); border-radius: 11px; background: #fff; color: var(--nt-ink); cursor: pointer; text-align: center; font-size: .75rem; }
-.nt .nt-tarjeta-opcion.seleccionada { border-color: var(--nt-plum); box-shadow: 0 0 0 2px color-mix(in srgb, var(--nt-plum) 18%, transparent); }
-.nt .nt-tarjeta-opcion input { position: absolute; opacity: 0; pointer-events: none; }
-.nt .nt-tarjeta-opcion:focus-within { outline: 2px solid var(--nt-plum); outline-offset: 2px; }
-.nt .nt-tarjeta-marca { display: grid; min-height: 27px; place-items: center; font-weight: 850; letter-spacing: .03em; }
-.nt .nt-marca-visa { color: #143c8b; font-size: 1.2rem; font-style: italic; }
-.nt .nt-marca-bcp { color: #07529b; font-size: 1.15rem; font-style: italic; }
-.nt .nt-marca-nacion { color: #c72535; font-size: .68rem; letter-spacing: 0; }
-.nt .nt-marca-bbva { color: #07529b; font-size: 1.1rem; }
-.nt .nt-tarjeta-demo > p { margin: 12px 0 0; color: var(--nt-soft); font-size: .8rem; line-height: 1.5; text-align: center; }
+.nt .nt-mercadopago-marca { width: fit-content; margin: 0 auto; padding: 7px 14px; border-radius: 999px; background: #e9f3ff; color: #0879bd; font-size: 1.1rem; font-weight: 650; }
+.nt .nt-mercadopago-marca strong { color: #07529b; }
+.nt .nt-tarjeta-demo > p { margin: 12px auto 0; max-width: 52ch; color: var(--nt-soft); font-size: .85rem; line-height: 1.5; text-align: center; }
+.nt .nt-tarjeta-demo > p strong { color: var(--nt-ink); }
+.nt .nt-aviso-pago { position: sticky; top: 0; z-index: 8; max-width: 1080px; margin: 12px auto; padding: 12px 16px; border: 1px solid #d7e5f5; border-radius: 12px; background: #eff7ff; color: #17466b; line-height: 1.5; }
 
 /* ---------- Ventanas ---------- */
 .nt .nt-overlay {
@@ -327,7 +321,6 @@
   .nt .nt-btn-ubicacion { align-self: flex-start; margin-top: -6px; margin-bottom: 12px; }
   .nt .nt-modal-detalle { grid-template-columns: 1fr; gap: 14px; }
   .nt .nt-detalle-img { aspect-ratio: 4 / 3; }
-  .nt .nt-tarjeta-opciones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nt .nt-modal { padding: 22px 18px; }
   .nt .nt-grilla { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .nt .nt-tarjeta-acciones { grid-template-columns: 1fr; }

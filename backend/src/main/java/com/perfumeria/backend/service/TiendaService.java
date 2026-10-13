@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -182,10 +183,38 @@ public class TiendaService {
         return respuesta;
     }
 
+    @Transactional
+    public boolean confirmarPagoTarjeta(Long idVenta, BigDecimal monto) {
+        if (idVenta == null || monto == null || monto.signum() <= 0) {
+            return false;
+        }
+        List<Map<String, Object>> ventas = jdbc.queryForList(
+                "SELECT monto_total, estado_venta FROM " + T_VENTA
+                        + " WHERE id_venta = ? AND LOWER(metodo_pago) = 'tarjeta'",
+                idVenta);
+        if (ventas.isEmpty()) {
+            return false;
+        }
+
+        Map<String, Object> venta = ventas.get(0);
+        BigDecimal totalRegistrado = new BigDecimal(String.valueOf(venta.get("monto_total")))
+                .setScale(2, RoundingMode.HALF_UP);
+        if (totalRegistrado.compareTo(monto.setScale(2, RoundingMode.HALF_UP)) != 0) {
+            return false;
+        }
+        if ("completada".equalsIgnoreCase(String.valueOf(venta.get("estado_venta")))) {
+            return true;
+        }
+        return jdbc.update(
+                "UPDATE " + T_VENTA + " SET estado_venta = 'Completada' "
+                        + "WHERE id_venta = ? AND LOWER(estado_venta) = 'pendiente'",
+                idVenta) == 1;
+    }
+
     // ---------- Seguimiento (número de orden + DNI/RUC) ----------
     public Map<String, Object> consultar(Long idVenta, String dni) {
         List<Map<String, Object>> filas = jdbc.queryForList(
-                "SELECT v.id_venta, v.fecha_hora, v.monto_total, v.metodo_pago, v.tipo_comprobante, "
+                "SELECT v.id_venta, v.fecha_hora, v.monto_total, v.metodo_pago, v.tipo_comprobante, v.estado_venta, "
                         + "c.nombre, c.apellido, pe.id_pedido, pe.estado_envio, pe.fecha_entrega "
                         + "FROM " + T_VENTA + " v "
                         + "JOIN " + T_CLIENTE + " c ON c.id_cliente = v.id_cliente "
@@ -210,6 +239,7 @@ public class TiendaService {
         respuesta.put("fecha", String.valueOf(f.get("fecha_hora")));
         respuesta.put("metodoPago", f.get("metodo_pago"));
         respuesta.put("tipoComprobante", f.get("tipo_comprobante"));
+        respuesta.put("estadoVenta", f.get("estado_venta"));
         respuesta.put("estadoEnvio", f.get("estado_envio") == null ? "PENDIENTE" : f.get("estado_envio"));
         respuesta.put("fechaEntrega", f.get("fecha_entrega") == null ? null : String.valueOf(f.get("fecha_entrega")));
         respuesta.put("total", f.get("monto_total"));

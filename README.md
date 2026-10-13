@@ -30,6 +30,16 @@ $env:USER_PASSWORD = [System.Net.NetworkCredential]::new("", $userSecure).Passwo
 
 La tienda solicita el correo del cliente y envía allí el número de orden y el DNI/RUC usado para consultar el seguimiento. También envía un aviso de nueva compra a `MAIL_NOTIFICATION_TO`; si no se define, usa `MAIL_USERNAME`. Para habilitar los envíos, configura `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` y `MAIL_FROM` en el entorno del backend. Por ejemplo, Gmail requiere una contraseña de aplicación; usa secretos del sistema de despliegue y nunca guardes la contraseña en el repositorio. Sin SMTP configurado, el pedido se registra igualmente y el cliente recibe un aviso para guardar sus datos de seguimiento.
 
+### Pago con tarjeta mediante Mercado Pago
+
+La opción Tarjeta redirige al Checkout Pro alojado por Mercado Pago; la tienda no solicita ni almacena el número, vencimiento o CVV. Configura estas variables como secretos del backend (por ejemplo, en Railway):
+
+- `MP_ACCESS_TOKEN`: Access Token de prueba para sandbox o credencial de producción para cobros reales. Nunca uses el token de producción en una demostración.
+- `MP_WEBHOOK_SECRET`: clave secreta de firma de webhook proporcionada al configurar la notificación en Mercado Pago.
+- `MP_WEBHOOK_URL`: URL pública HTTPS del endpoint, por ejemplo `https://tu-api.example.com/api/tienda/mercadopago/webhook`; registra la misma URL en Mercado Pago.
+
+El servidor verifica la firma y consulta el pago directamente con Mercado Pago antes de marcar la venta como completada. Si las credenciales o el webhook no están configurados, el pago con tarjeta no se inicia. Para probarlo localmente, usa credenciales de prueba y una URL HTTPS pública de webhook; no se debe considerar que un retorno al sitio por sí solo confirme el pago.
+
 ### Guion breve para la exposición
 
 1. Presenta el catálogo y muestra cómo filtrar perfumes por género y marca.
@@ -38,7 +48,7 @@ La tienda solicita el correo del cliente y envía allí el número de orden y el
 4. Para Yape, verifica el pago en la aplicación oficial; después, como administrador, abre Ventas y selecciona "Confirmar pago Yape". Solo entonces se contará en las estadísticas.
 5. Muestra las estadísticas por día, semana o año y cómo se gestionan perfumes y pedidos desde el panel.
 
-Para una compra en vivo, confirma antes que la API y el correo SMTP estén disponibles. Yape y la selección de tarjeta son demostraciones con validación manual: no se procesan cobros reales. El comprobante por email es informativo; no es una boleta electrónica emitida por SUNAT. No muestres contraseñas, datos de tarjetas ni datos personales reales durante la presentación.
+Para una compra en vivo, confirma antes que la API, el correo SMTP y las credenciales de Mercado Pago estén disponibles. Yape requiere validación manual; tarjeta usa Mercado Pago cuando el backend está configurado. El comprobante por email es informativo; no es una boleta electrónica emitida por SUNAT. No muestres contraseñas, datos de tarjetas ni datos personales reales durante la presentación.
 
 El panel tiene una pantalla de acceso con opción para crear cuenta con usuario, correo y contraseña confirmada. Las cuentas registradas pueden iniciar sesión con su nombre de usuario o correo. El servidor asigna siempre el rol `USUARIO` a cuentas registradas: pueden consultar, pero no crear, editar ni eliminar datos. Los correos y nombres de usuario registrados deben ser únicos. Solo `ADMIN_USERNAME`, configurado en el servidor, puede administrar registros. La contraseña del administrador y la cuenta inicial de consulta son obligatorias y deben tener al menos 12 caracteres. No guardes credenciales en el repositorio. Para publicar el API, exige HTTPS y configura estas variables como secretos del servicio.
 
@@ -53,7 +63,7 @@ $env:SPRING_PROFILES_ACTIVE = "local-demo"
 .\mvnw.cmd spring-boot:run
 ```
 
-El inicializador se niega a insertar el perfume si la conexión no es H2. Los datos de esta base en memoria se pierden al detener el backend. Inicia el frontend apuntando a `http://localhost:8080/api`; después entra con una cuenta de usuario, agrega Fahrenheit al carrito y selecciona Yape. El QR se muestra en el pago, pero la aplicación no verifica transferencias. También puedes elegir Tarjeta para mostrar las opciones de demostración Visa, BCP, Banco de la Nación y BBVA; no se recopilan datos ni se procesa un cobro real. Para demostrar la confirmación de pago, cierra sesión, entra como administrador, abre Ventas y confirma el pago solo después de verificarlo en el sistema correspondiente.
+El inicializador se niega a insertar el perfume si la conexión no es H2. Los datos de esta base en memoria se pierden al detener el backend. Inicia el frontend apuntando a `http://localhost:8080/api`; después entra con una cuenta de usuario, agrega Fahrenheit al carrito y selecciona Yape. El QR se muestra en el pago, pero la aplicación no verifica transferencias. Para probar Tarjeta, configura credenciales de sandbox de Mercado Pago, un webhook HTTPS accesible y las tres variables `MP_*` descritas arriba. No uses credenciales de producción para la exposición.
 
 Las pruebas del backend usan una base H2 temporal y no necesitan credenciales PostgreSQL:
 

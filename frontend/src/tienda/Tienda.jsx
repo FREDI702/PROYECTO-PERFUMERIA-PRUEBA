@@ -26,14 +26,8 @@ const PAISES = [
 const PAGOS = [
   { valor: 'yape', texto: 'Yape' },
   { valor: 'plin', texto: 'Plin' },
-  { valor: 'tarjeta', texto: 'Tarjeta' },
+  { valor: 'tarjeta', texto: 'Tarjeta · Mercado Pago' },
   { valor: 'efectivo', texto: 'Efectivo contra entrega' },
-];
-const OPCIONES_TARJETA = [
-  { valor: 'visa', nombre: 'Visa', marca: 'VISA' },
-  { valor: 'bcp', nombre: 'BCP', marca: 'BCP' },
-  { valor: 'nacion', nombre: 'Banco de la Nación', marca: 'Banco de la Nación' },
-  { valor: 'bbva', nombre: 'BBVA', marca: 'BBVA' },
 ];
 const PASOS_ENVIO = [
   { clave: 'PENDIENTE', texto: 'Pedido recibido' },
@@ -46,6 +40,18 @@ const UBIGEO = new Ubigeoperu();
 
 function claveCarrito(usuario) {
   return `${CLAVE_CARRITO}:${encodeURIComponent(usuario)}`;
+}
+
+function leerMensajePago() {
+  const parametros = new URLSearchParams(window.location.search);
+  const resultado = parametros.get('mp_result');
+  const orden = parametros.get('order');
+  const mensajes = {
+    approved: `Mercado Pago recibió la solicitud de aprobación${orden ? ` para la orden ${orden}` : ''}. Estamos verificando el pago; se reflejará en la cuenta cuando llegue la confirmación segura.`,
+    pending: `El pago${orden ? ` de la orden ${orden}` : ''} está pendiente en Mercado Pago. Revisa su estado antes de volver a comprar.`,
+    failure: `Mercado Pago no confirmó el pago${orden ? ` de la orden ${orden}` : ''}. Revisa el estado antes de volver a enviar el pedido.`,
+  };
+  return mensajes[resultado] || '';
 }
 
 function leerCarrito(clave) {
@@ -243,7 +249,7 @@ function Carrito({ lineas, total, onCerrar, onCambiar, onQuitar, onContinuar }) 
 }
 
 // ---------- Datos de entrega y pago ----------
-function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
+function Checkout({ lineas, total, onVolver, onCerrar, onListo, onPagarTarjeta }) {
   const [form, setForm] = useState({
     nombre: '', apellido: '', dniRuc: '', telefono: '', email: '', direccion: '', referencia: '',
     pais: 'Perú', departamento: '', provincia: '', distrito: '', codigoPostal: '',
@@ -251,7 +257,6 @@ function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
   });
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
-  const [opcionTarjeta, setOpcionTarjeta] = useState('visa');
   const [obteniendoUbicacion, setObteniendoUbicacion] = useState(false);
   const [mensajeUbicacion, setMensajeUbicacion] = useState('');
   const departamentoSeleccionado = form.departamento
@@ -360,6 +365,13 @@ function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
         tipoComprobante: form.tipoComprobante,
         items: lineas.map((l) => ({ idPerfume: l.id, cantidad: l.cantidad })),
       });
+      if (form.metodoPago === 'tarjeta') {
+        if (!pedido.urlPago) {
+          throw new Error('Mercado Pago no devolvió el enlace seguro para pagar. No vuelvas a enviar el pedido; consulta primero Seguimiento.');
+        }
+        onPagarTarjeta(pedido.urlPago);
+        return;
+      }
       onListo(pedido, dni, form.email.trim());
     } catch (err) {
       setError(err.message);
@@ -468,27 +480,11 @@ function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
         )}
 
         {form.metodoPago === 'tarjeta' && (
-          <section className="nt-tarjeta-demo" aria-label="Opciones de tarjeta">
-            <h3>Selecciona una opción de tarjeta</h3>
-            <div className="nt-tarjeta-opciones" role="radiogroup" aria-label="Tarjeta o banco">
-              {OPCIONES_TARJETA.map((opcion) => (
-                <label
-                  className={`nt-tarjeta-opcion${opcionTarjeta === opcion.valor ? ' seleccionada' : ''}`}
-                  key={opcion.valor}
-                >
-                  <input
-                    type="radio"
-                    name="opcion-tarjeta"
-                    value={opcion.valor}
-                    checked={opcionTarjeta === opcion.valor}
-                    onChange={() => setOpcionTarjeta(opcion.valor)}
-                  />
-                  <span className={`nt-tarjeta-marca nt-marca-${opcion.valor}`}>{opcion.marca}</span>
-                  <span>{opcion.nombre}</span>
-                </label>
-              ))}
-            </div>
-            <p>Demostración para la exposición: no ingreses datos de tarjeta. Esta opción no realiza cobros reales; el pago debe verificarse manualmente.</p>
+          <section className="nt-tarjeta-demo" aria-label="Pago seguro con tarjeta">
+            <h3>Pago seguro con tarjeta</h3>
+            <div className="nt-mercadopago-marca" aria-label="Mercado Pago">mercado <strong>pago</strong></div>
+            <p>Al confirmar, continuarás en el sitio seguro de Mercado Pago para ingresar los datos de tu tarjeta. La tienda no recibe ni guarda el número, la fecha de vencimiento ni el CVV.</p>
+            <p>Total de la compra: <strong>{soles(total)}</strong></p>
           </section>
         )}
 
@@ -508,6 +504,8 @@ function Checkout({ lineas, total, onVolver, onCerrar, onListo }) {
               ? 'Enviando…'
               : form.metodoPago === 'yape'
                 ? 'Registrar pedido · pago por validar'
+                : form.metodoPago === 'tarjeta'
+                ? 'Continuar a Mercado Pago'
                 : 'Confirmar pedido'}
           </button>
         </div>
@@ -568,6 +566,11 @@ function Orden({ pedido, titulo, onCerrar, extra, onActualizar, actualizando, er
         Pago: {pedido.metodoPago} · Comprobante: {pedido.tipoComprobante}
         {pedido.fechaEntrega ? <> · Entrega: {pedido.fechaEntrega}</> : null}
       </p>
+      {pedido.estadoVenta && (
+        <p className="nt-estado-actual" role="status">
+          Estado del pago: <strong>{String(pedido.estadoVenta).toLowerCase() === 'completada' ? 'Confirmado' : 'Pendiente de confirmación'}</strong>
+        </p>
+      )}
       {extra}
       {error && <p className="nt-error" role="alert">{error}</p>}
       <div className="nt-fila-botones nt-noprint">
@@ -685,6 +688,7 @@ export default function Tienda({ sesion, onSalir }) {
   const [panel, setPanel] = useState(''); // '' | carrito | checkout | seguimiento
   const [detalle, setDetalle] = useState(null);
   const [confirmado, setConfirmado] = useState(null); // { pedido, dni, correo }
+  const [mensajePago] = useState(leerMensajePago);
 
   async function cargar() {
     try {
@@ -713,6 +717,11 @@ export default function Tienda({ sesion, onSalir }) {
         setEstado('error');
       });
     return () => { activa = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('mp_result')) return;
+    window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`);
   }, []);
 
   useEffect(() => {
@@ -803,6 +812,12 @@ export default function Tienda({ sesion, onSalir }) {
     cargar(); // refresca el stock
   }
 
+  function pagarConMercadoPago(url) {
+    setCarrito([]);
+    cargar();
+    window.location.assign(url);
+  }
+
   function irInicio() {
     document.getElementById('nt-inicio')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -850,6 +865,7 @@ export default function Tienda({ sesion, onSalir }) {
           <button type="button" className="nt-btn-link" onClick={onSalir}>Cerrar sesión</button>
         </div>
       </header>
+      {mensajePago && <p className="nt-aviso-pago" role="status">{mensajePago}</p>}
 
       <FiltrosCatalogo genero={genero} onSeleccionarGenero={seleccionarGenero}
                        marcas={marcas} marcaSel={marcaSel} onMarca={setMarcaSel}
@@ -920,7 +936,7 @@ export default function Tienda({ sesion, onSalir }) {
       )}
       {panel === 'checkout' && (
         <Checkout lineas={lineas} total={total} onVolver={() => setPanel('carrito')}
-                  onCerrar={() => setPanel('')} onListo={pedidoListo} />
+                  onCerrar={() => setPanel('')} onListo={pedidoListo} onPagarTarjeta={pagarConMercadoPago} />
       )}
       {panel === 'seguimiento' && <Seguimiento onCerrar={() => setPanel('')} />}
       {panel === 'cuenta' && (

@@ -45,9 +45,13 @@ async function pedir(ruta, opciones, mensaje, tiempoLimiteMs = 0) {
     }
 
     if (!respuesta.ok) {
+        const cuerpoError = respuesta.headers.get("content-type")?.includes("application/json")
+            ? await respuesta.json()
+            : {};
+        const detalleServidor = cuerpoError.detail || cuerpoError.mensaje;
         const detalle = respuesta.status === 403
             ? "El backend rechazó este permiso. Reinicia o actualiza el backend que usa el frontend y confirma que permita crear pedidos a usuarios."
-            : `la API respondió ${respuesta.status} en /${ruta}.`;
+            : detalleServidor || `la API respondió ${respuesta.status} en /${ruta}.`;
         const error = new Error(`${mensaje}: ${detalle}`);
         error.status = respuesta.status;
         throw error;

@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/tienda/mercadopago/webhook").permitAll()
                         .requestMatchers("/api/auth/**").hasAnyRole("ADMIN", "USUARIO")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/perfumes", "/api/perfumes/**",
