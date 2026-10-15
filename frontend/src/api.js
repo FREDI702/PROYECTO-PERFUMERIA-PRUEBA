@@ -96,6 +96,56 @@ export const api = {
         ),
     cerrarSesion: () => sessionStorage.removeItem(AUTH_KEY),
     listar: (ruta) => pedir(ruta, undefined, "No se pudo cargar la información"),
+    configuracionImagenes: () =>
+        pedir("imagenes/config", undefined, "No se pudo obtener la configuración de imágenes"),
+    subirImagenPerfume: async (archivo, idPerfume) => {
+        if (!archivo || !Number.isSafeInteger(idPerfume) || idPerfume <= 0) {
+            throw new Error("Selecciona una imagen válida para un perfume guardado.");
+        }
+        if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
+            throw new Error("La imagen debe estar en formato JPG, PNG o WebP.");
+        }
+        if (archivo.size > 5 * 1024 * 1024) {
+            throw new Error("La imagen no puede superar los 5 MB.");
+        }
+
+        const configuracion = await api.configuracionImagenes();
+        if (!configuracion.cloudName) {
+            throw new Error("Falta configurar Cloudinary en el backend para subir imágenes.");
+        }
+        const publicId = `perfume-${idPerfume}`;
+        const firma = await pedir(
+            "imagenes/firma",
+            {
+                method: "POST",
+                headers: JSON_HEADERS,
+                body: JSON.stringify({ publicId }),
+            },
+            "No se pudo autorizar la carga de la imagen",
+        );
+        const formulario = new FormData();
+        formulario.append("file", archivo);
+        formulario.append("api_key", firma.apiKey);
+        formulario.append("timestamp", String(firma.timestamp));
+        formulario.append("public_id", firma.publicId);
+        formulario.append("overwrite", String(firma.overwrite));
+        formulario.append("signature", firma.signature);
+
+        let respuesta;
+        try {
+            respuesta = await fetch(
+                `https://api.cloudinary.com/v1_1/${encodeURIComponent(firma.cloudName)}/image/upload`,
+                { method: "POST", body: formulario },
+            );
+        } catch (error) {
+            throw new Error("No se pudo conectar con el servicio de imágenes.", { cause: error });
+        }
+        if (!respuesta.ok) {
+            const cuerpo = await respuesta.json().catch(() => ({}));
+            throw new Error(cuerpo.error?.message || `Cloudinary respondió ${respuesta.status} al subir la imagen.`);
+        }
+        return respuesta.json();
+    },
     crear: (ruta, datos) =>
         pedir(
             ruta,

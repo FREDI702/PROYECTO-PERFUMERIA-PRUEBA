@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "../api.js";
 import { archivoDe } from "../imagenes.js";
 
 // Color del frasco según el nombre (cada perfume se ve distinto)
@@ -35,10 +36,23 @@ export function Frasco({ nombre }) {
 // Foto real (por nombre) -> foto por id (public/perfumes/<id>.jpg|png) -> frasco dibujado
 function PerfumeImg({ id, nombre, marca }) {
     const [intento, setIntento] = useState(0);
+    const [cloudName, setCloudName] = useState("");
     const archivo = archivoDe(marca, nombre);
+    useEffect(() => {
+        let activa = true;
+        api.configuracionImagenes()
+            .then((configuracion) => {
+                if (activa) setCloudName(configuracion.cloudName || "");
+            })
+            .catch((error) => {
+                console.error("No se pudo cargar la configuración de imágenes.", error);
+            });
+        return () => { activa = false; };
+    }, []);
     const candidatas = [
         archivo && `/perfumes/${archivo}.jpg`,
         archivo && `/perfumes/${archivo}.png`,
+        cloudName && id ? `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/image/upload/f_auto,q_auto/perfume-${id}` : null,
         `/perfumes/${id}.jpg`,
         `/perfumes/${id}.png`,
     ].filter(Boolean);

@@ -40,6 +40,23 @@ La opción Tarjeta redirige al Checkout Pro alojado por Mercado Pago; la tienda 
 
 El servidor verifica la firma y consulta el pago directamente con Mercado Pago antes de marcar la venta como completada. Si las credenciales o el webhook no están configurados, el pago con tarjeta no se inicia. Para probarlo localmente, usa credenciales de prueba y una URL HTTPS pública de webhook; no se debe considerar que un retorno al sitio por sí solo confirme el pago.
 
+### Imágenes de perfumes
+
+El administrador puede adjuntar una imagen desde el formulario de perfumes (JPG, PNG o WebP, hasta 5 MB). El archivo se sube directamente a Cloudinary con una firma temporal generada por el backend; la clave secreta nunca se entrega al navegador y el archivo ni su URL se guardan en PostgreSQL. La imagen usa el identificador del perfume como `public_id`, por lo que se muestra en la tienda y se puede reemplazar desde el mismo formulario.
+
+Crea una cuenta de Cloudinary y configura `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` y `CLOUDINARY_API_SECRET` como secretos/variables del backend en Railway. Tras desplegar el backend, la carga de imágenes quedará habilitada; si no se han configurado, el formulario muestra un error explícito. No guardes estas credenciales en el repositorio ni las compartas en el chat.
+
+### Importar perfumes de Chanel y Maison Niche
+
+El script `scripts/importar-perfumes-fuentes.ps1` agrega perfumes de Bleu de Chanel, algunas fragancias femeninas Chanel, Parfums de Marly y una fragancia representativa para cada marca que estaba vacía en el catálogo. Omite los que ya existen con la misma marca, nombre, concentración y tamaño, y asigna 10 unidades de stock. Primero puedes revisar lo que se agregaría con `-WhatIf`; para importar, usa la URL base del backend (terminada en `/api`) y una cuenta administradora:
+
+```powershell
+.\scripts\importar-perfumes-fuentes.ps1 -ApiUrl "https://tu-api.example.com/api" -WhatIf
+.\scripts\importar-perfumes-fuentes.ps1 -ApiUrl "https://tu-api.example.com/api"
+```
+
+El script pide las credenciales de administrador de forma interactiva y no las guarda. Omite perfumes cuyo tamaño no está confirmado. Si la API rechaza un producto, muestra el estado y el detalle devuelto por el servidor y se detiene; puedes volver a ejecutarlo, pues los productos que ya existan se omiten. Los precios se basan en precios publicados por Chanel, Maison Niche y resultados de productos de Falabella Perú al preparar la lista; pueden ser promocionales y cambiar, así que confírmalos antes de vender. Referencias: [Chanel Bleu de Chanel](https://www.chanel.com/pe/perfumes/masculinos/c/7x1x2x34/bleu-de-chanel/), [Chanel perfumes femeninos](https://www.chanel.com/pe/perfumes/femeninas/c/7x1x1/) y [Falabella Perú](https://www.falabella.com.pe/falabella-pe/search?Ntt=perfumes).
+
 ### Guion breve para la exposición
 
 1. Presenta el catálogo y muestra cómo filtrar perfumes por género y marca.

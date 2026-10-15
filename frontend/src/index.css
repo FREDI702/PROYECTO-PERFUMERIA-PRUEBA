@@ -256,6 +256,9 @@ main { flex: 1; min-width: 0; }
 .modal label { display: flex; flex-direction: column; gap: 5px; font-size: .85rem; color: var(--suave); }
 .modal input, .modal select { padding: 11px 12px; border: 1px solid var(--borde); border-radius: 11px; color: var(--texto); background: #fff; }
 .modal input:focus, .modal select:focus { outline: 2px solid #ddc5d7; border-color: var(--morado); }
+.modal .modal-imagen-perfume { width: min(100%, 180px); max-height: 180px; align-self: flex-start; object-fit: contain; border-radius: 10px; }
+.modal div.modal-imagen-perfume { display: grid; place-items: center; }
+.modal-imagen-perfume .foto, .modal-imagen-perfume .frasco { max-width: 100%; max-height: 180px; }
 .modal-acc { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 
 /* Catálogo (estilo boutique) */

@@ -23,7 +23,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "USER_PASSWORD=TestUserPass123!",
         "MP_ACCESS_TOKEN=",
         "MP_WEBHOOK_SECRET=",
-        "MP_WEBHOOK_URL="
+        "MP_WEBHOOK_URL=",
+        "CLOUDINARY_CLOUD_NAME=demo-cloud",
+        "CLOUDINARY_API_KEY=123456789012345",
+        "CLOUDINARY_API_SECRET=test-cloudinary-secret"
 })
 @AutoConfigureMockMvc
 class PerfumeriaApplicationTests {
@@ -105,6 +108,50 @@ class PerfumeriaApplicationTests {
         mockMvc.perform(get("/api/auth/me").with(httpBasic("admin-prueba", "TestAdminPass123!")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rol").value("ADMIN"));
+    }
+
+    @Test
+    void laFirmaDeImagenEsPublicaSoloComoConfiguracionYLaCargaSoloParaAdmin() throws Exception {
+        mockMvc.perform(get("/api/imagenes/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cloudName").value("demo-cloud"));
+
+        mockMvc.perform(post("/api/imagenes/firma")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"publicId":"perfume-chanel-n5-edp-100ml"}
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/imagenes/firma")
+                        .with(httpBasic("usuario-prueba", "TestUserPass123!"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"publicId":"perfume-chanel-n5-edp-100ml"}
+                                """))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/imagenes/firma")
+                        .with(httpBasic("admin-prueba", "TestAdminPass123!"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"publicId":"perfume-chanel-n5-edp-100ml"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cloudName").value("demo-cloud"))
+                .andExpect(jsonPath("$.apiKey").value("123456789012345"))
+                .andExpect(jsonPath("$.publicId").value("perfume-chanel-n5-edp-100ml"))
+                .andExpect(jsonPath("$.signature").isNotEmpty())
+                .andExpect(jsonPath("$.overwrite").value(true))
+                .andExpect(jsonPath("$.apiSecret").doesNotExist());
+
+        mockMvc.perform(post("/api/imagenes/firma")
+                        .with(httpBasic("admin-prueba", "TestAdminPass123!"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"publicId":"../no-permitido"}
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

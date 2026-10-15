@@ -59,14 +59,26 @@ function EntityPage({ clave, rol }) {
     }, [cargar]);
 
     // TC02 / TC03 - CREAR o EDITAR
-    const guardar = async (datos) => {
+    const guardar = async (datos, imagen) => {
+        let guardado;
         try {
-            if (modal.item) await api.actualizar(entidad.ruta, modal.item.id, datos);
-            else await api.crear(entidad.ruta, datos);
+            if (modal.item) {
+                await api.actualizar(entidad.ruta, modal.item.id, datos);
+                guardado = modal.item;
+            } else {
+                guardado = await api.crear(entidad.ruta, datos);
+            }
+            if (entidad.ruta === "perfumes" && imagen) {
+                await api.subirImagenPerfume(imagen, guardado.id);
+            }
             setModal(null);
             setErrorForm("");
             await cargar();
         } catch (e) {
+            if (guardado) {
+                setModal({ item: guardado });
+                await cargar();
+            }
             setErrorForm(e.message);
         }
     };

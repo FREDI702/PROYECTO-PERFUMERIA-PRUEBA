@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "./Icon.jsx";
 import { etiqueta } from "../config.js";
+import PerfumeImg from "./PerfumeImg.jsx";
 
 function aFormulario(campos, item) {
     const f = {};
@@ -26,14 +27,43 @@ function aDatos(campos, form) {
 function FormModal({ entidad, item, lookups, onGuardar, onCerrar, error }) {
     const [form, setForm] = useState(() => aFormulario(entidad.campos, item));
     const [guardando, setGuardando] = useState(false);
+    const [imagen, setImagen] = useState(null);
+    const [errorImagen, setErrorImagen] = useState("");
+    const esPerfume = entidad.ruta === "perfumes";
 
     const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const cambiarImagen = (evento) => {
+        const archivo = evento.target.files?.[0] || null;
+        if (!archivo) {
+            setImagen(null);
+            setErrorImagen("");
+            return;
+        }
+        if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
+            evento.target.value = "";
+            setImagen(null);
+            setErrorImagen("La imagen debe estar en formato JPG, PNG o WebP.");
+            return;
+        }
+        if (archivo.size > 5 * 1024 * 1024) {
+            evento.target.value = "";
+            setImagen(null);
+            setErrorImagen("La imagen no puede superar los 5 MB.");
+            return;
+        }
+        setImagen(archivo);
+        setErrorImagen("");
+    };
 
     const enviar = async (e) => {
         e.preventDefault();
         setGuardando(true);
-        await onGuardar(aDatos(entidad.campos, form));
-        setGuardando(false);
+        try {
+            await onGuardar(aDatos(entidad.campos, form), imagen);
+        } finally {
+            setGuardando(false);
+        }
     };
 
     return (
@@ -76,6 +106,30 @@ function FormModal({ entidad, item, lookups, onGuardar, onCerrar, error }) {
                     </label>
                 ))}
 
+                {esPerfume && (
+                    <label>
+                        <span>Foto del perfume (JPG, PNG o WebP; máximo 5 MB)</span>
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={cambiarImagen}
+                            disabled={guardando}
+                        />
+                        {imagen ? (
+                            <img
+                                className="modal-imagen-perfume"
+                                src={URL.createObjectURL(imagen)}
+                                alt="Vista previa de la imagen seleccionada"
+                            />
+                        ) : item ? (
+                            <div className="modal-imagen-perfume">
+                                <PerfumeImg id={item.id} nombre={item.nombre} marca={lookups.marcas?.find((marca) => marca.id === item.idMarca)?.nombre} />
+                            </div>
+                        ) : null}
+                    </label>
+                )}
+
+                {errorImagen && <p className="error" role="alert">{errorImagen}</p>}
                 {error && <p className="error">{error}</p>}
 
                 <div className="modal-acc">
