@@ -24,9 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "MP_ACCESS_TOKEN=",
         "MP_WEBHOOK_SECRET=",
         "MP_WEBHOOK_URL=",
-        "CLOUDINARY_CLOUD_NAME=demo-cloud",
-        "CLOUDINARY_API_KEY=123456789012345",
-        "CLOUDINARY_API_SECRET=test-cloudinary-secret"
+        "cloudinary.cloud-name=demo-cloud",
+        "cloudinary.api-key=123456789012345",
+        "cloudinary.api-secret=test-cloudinary-secret"
 })
 @AutoConfigureMockMvc
 class PerfumeriaApplicationTests {
@@ -119,7 +119,7 @@ class PerfumeriaApplicationTests {
         mockMvc.perform(post("/api/imagenes/firma")
                         .contentType(APPLICATION_JSON)
                         .content("""
-                                {"publicId":"perfume-chanel-n5-edp-100ml"}
+                                {"publicId":"perfume-1"}
                                 """))
                 .andExpect(status().isUnauthorized());
 
@@ -127,7 +127,7 @@ class PerfumeriaApplicationTests {
                         .with(httpBasic("usuario-prueba", "TestUserPass123!"))
                         .contentType(APPLICATION_JSON)
                         .content("""
-                                {"publicId":"perfume-chanel-n5-edp-100ml"}
+                                {"publicId":"perfume-1"}
                                 """))
                 .andExpect(status().isForbidden());
 
@@ -135,12 +135,12 @@ class PerfumeriaApplicationTests {
                         .with(httpBasic("admin-prueba", "TestAdminPass123!"))
                         .contentType(APPLICATION_JSON)
                         .content("""
-                                {"publicId":"perfume-chanel-n5-edp-100ml"}
+                                {"publicId":"perfume-1"}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cloudName").value("demo-cloud"))
                 .andExpect(jsonPath("$.apiKey").value("123456789012345"))
-                .andExpect(jsonPath("$.publicId").value("perfume-chanel-n5-edp-100ml"))
+                .andExpect(jsonPath("$.publicId").value("perfume-1"))
                 .andExpect(jsonPath("$.signature").isNotEmpty())
                 .andExpect(jsonPath("$.overwrite").value(true))
                 .andExpect(jsonPath("$.apiSecret").doesNotExist());

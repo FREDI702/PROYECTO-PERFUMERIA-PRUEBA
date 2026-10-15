@@ -7,6 +7,18 @@ const PALETAS = [
     ["#f6b73c", "#e08a00"], ["#f4efd8", "#d8d2b0"], ["#f4a79a", "#e57f6d"],
     ["#b9a0ff", "#7c3aed"], ["#9ad7e8", "#4aa3c0"], ["#c9e7b5", "#7fb069"],
 ];
+// La configuración de Cloudinary se pide una sola vez y se comparte entre todas las tarjetas
+let configuracionEnCache = null;
+const obtenerConfiguracion = () => {
+    if (!configuracionEnCache) {
+        configuracionEnCache = api.configuracionImagenes().catch((error) => {
+            configuracionEnCache = null;
+            throw error;
+        });
+    }
+    return configuracionEnCache;
+};
+
 const tono = (t = "") => PALETAS[[...t].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETAS.length];
 
 export function Frasco({ nombre }) {
@@ -40,7 +52,7 @@ function PerfumeImg({ id, nombre, marca }) {
     const archivo = archivoDe(marca, nombre);
     useEffect(() => {
         let activa = true;
-        api.configuracionImagenes()
+        obtenerConfiguracion()
             .then((configuracion) => {
                 if (activa) setCloudName(configuracion.cloudName || "");
             })
